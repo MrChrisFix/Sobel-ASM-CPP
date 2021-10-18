@@ -2,6 +2,8 @@
 #include <chrono>
 #include <windows.h> 
 
+#include "CppDLL.h"
+
 namespace ProjektJA {
 
 	using namespace System;
@@ -11,23 +13,15 @@ namespace ProjektJA {
 	using namespace System::Data;
 	using namespace System::Drawing;
 
+
 	/// <summary>
 	/// Podsumowanie informacji o MyForm
 	/// </summary>
 	public ref class MyForm : public System::Windows::Forms::Form
 	{
-			///////////////////////
-			//£adowanie bibliotek//
-			///////////////////////
 			//ASM
 			typedef int (*FunkcjaASM_t)(); //drugi nawias na argumenty
 			FunkcjaASM_t wykonajASM;
-
-			typedef int (*FunkcjaCPP_t)(); //drugi nawias na argumenty
-			FunkcjaCPP_t wykonajCpp;
-
-
-			
 
 	public:
 		MyForm(void)
@@ -38,7 +32,7 @@ namespace ProjektJA {
 			//
 			this->comboBox1->SelectedIndex = 0;
 
-			loadDLLs();
+			loadAsmDLL();
 		}
 
 	protected:
@@ -52,24 +46,20 @@ namespace ProjektJA {
 				delete components;
 			}
 		}
-		void loadDLLs()
+		void loadAsmDLL()
 		{
 			HINSTANCE asmDLL = LoadLibrary(L"AsemblerDLL.dll");
-			FunkcjaASM_t wykonajASM = (FunkcjaASM_t)GetProcAddress(asmDLL, "FunkcjaASM"); // w string jest nazwa funkcji
 
-			//CPP
-			typedef int (*FunkcjaCPP_t)(); //drugi nawias na argumenty
-			HINSTANCE CppDLL = LoadLibrary(L"CppDLL.dll");
-			if (!CppDLL)
+			if (!asmDLL)
 			{
 				//nie udalo sie zaladwac biblioteki
-				this->label2->Text = "ERROR_LOAD";
+				this->label2->Text += "ERROR_ASM_LOAD";
 			}
 			else
 			{
-				FunkcjaCPP_t wykonajCpp = (FunkcjaCPP_t)GetProcAddress(CppDLL, "tangensMilion");
-				if (!wykonajCpp)
-					this->label2->Text = "ERROR_WHERE";
+				this->wykonajASM = (FunkcjaASM_t)GetProcAddress(asmDLL, "FunkcjaASM");// w string jest nazwa funkcji
+				if (!wykonajASM)
+					this->label2->Text += "ERROR_ASM_WHERE";
 			}
 
 		}
@@ -289,9 +279,11 @@ namespace ProjektJA {
 		{
 			//Otworzyc biblioteke C++ i wykoanc algorytm
 
-			wykonajCpp();
+			tangensMilion();
 		}
 		auto end = std::chrono::steady_clock::now();
+
+		//this->progressBar1->Value +=; //Tak sie ustawia progressbar
 
 		std::chrono::duration<double> elapsed_seconds = end - start;
 

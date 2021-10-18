@@ -8,3 +8,5 @@
 #endif
 
 extern "C" CPPDLL_API void tangensMilion();
+
+//void CPPDLL_API __stdcall  tangensMilion();

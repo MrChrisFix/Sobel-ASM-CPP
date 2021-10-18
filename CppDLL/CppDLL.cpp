@@ -1,7 +1,7 @@
 #include "CppDLL.h"
 #include "pch.h"
 
-void tangensMilion()
+extern "C" __declspec(dllexport) void tangensMilion()
 {
 	double a = 0;
 	for (int i = 0; i < 1000000; i++)
