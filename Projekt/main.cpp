@@ -2,6 +2,7 @@
 
 using namespace System::Windows::Forms;
 
+[System::STAThread]
 int main()
 {
 	Application::EnableVisualStyles();

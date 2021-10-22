@@ -127,9 +127,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\CppDLL\ReadBMP.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\CppDLL\ReadBMP.h" />
     <ClInclude Include="main.h">
       <FileType>CppForm</FileType>
     </ClInclude>

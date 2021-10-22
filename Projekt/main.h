@@ -1,8 +1,10 @@
 #pragma once
 #include <chrono>
 #include <windows.h> 
+#include <msclr/marshal_cppstd.h>
 
 #include "CppDLL.h"
+#include "ReadBMP.h"
 
 namespace ProjektJA {
 
@@ -19,9 +21,11 @@ namespace ProjektJA {
 	/// </summary>
 	public ref class MyForm : public System::Windows::Forms::Form
 	{
-			//ASM
-			typedef int (*FunkcjaASM_t)(); //drugi nawias na argumenty
-			FunkcjaASM_t wykonajASM;
+		//ASM
+		typedef int (*FunkcjaASM_t)(); //drugi nawias na argumenty
+		FunkcjaASM_t wykonajASM;
+
+		Bitmap^ loadedBitmap;
 
 	public:
 		MyForm(void)
@@ -31,7 +35,10 @@ namespace ProjektJA {
 			//TODO: W tym miejscu dodaj kod konstruktora
 			//
 			this->comboBox1->SelectedIndex = 0;
-
+			
+			this->openFileDialog1->Title = "Wybierz obraz";
+			this->openFileDialog1->FileName = "";
+			this->openFileDialog1->Filter = "Bitmaps|*.bmp";
 			loadAsmDLL();
 		}
 
@@ -45,6 +52,8 @@ namespace ProjektJA {
 			{
 				delete components;
 			}
+
+			if (this->loadedBitmap != nullptr) delete this->loadedBitmap;
 		}
 		void loadAsmDLL()
 		{
@@ -63,20 +72,20 @@ namespace ProjektJA {
 			}
 
 		}
-	private: System::Windows::Forms::PictureBox^ pictureBox1;
 
+
+	private: System::Windows::Forms::PictureBox^ pictureBox1;
+	private: System::Windows::Forms::PictureBox^ pictureBox2;
 	private: System::Windows::Forms::ProgressBar^ progressBar1;
 	private: System::Windows::Forms::Button^ button1;
 	private: System::Windows::Forms::MenuStrip^ menuStrip1;
-
 	private: System::Windows::Forms::OpenFileDialog^ openFileDialog1;
 	private: System::Windows::Forms::SaveFileDialog^ saveFileDialog1;
 	private: System::Windows::Forms::ToolStripMenuItem^ wczytajToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^ zapiszToolStripMenuItem;
-	private: System::Windows::Forms::Label^ label1;
 	private: System::Windows::Forms::ComboBox^ comboBox1;
+	private: System::Windows::Forms::Label^ label1;
 	private: System::Windows::Forms::Label^ label2;
-	private: System::Windows::Forms::PictureBox^ pictureBox2;
 	private: System::Windows::Forms::Label^ label3;
 	private: System::Windows::Forms::Label^ label4;
 
@@ -119,9 +128,9 @@ namespace ProjektJA {
 			this->pictureBox1->Location = System::Drawing::Point(12, 62);
 			this->pictureBox1->Name = L"pictureBox1";
 			this->pictureBox1->Size = System::Drawing::Size(652, 418);
+			this->pictureBox1->SizeMode = System::Windows::Forms::PictureBoxSizeMode::Zoom;
 			this->pictureBox1->TabIndex = 0;
 			this->pictureBox1->TabStop = false;
-			this->pictureBox1->Click += gcnew System::EventHandler(this, &MyForm::pictureBox1_Click);
 			// 
 			// progressBar1
 			// 
@@ -129,7 +138,6 @@ namespace ProjektJA {
 			this->progressBar1->Name = L"progressBar1";
 			this->progressBar1->Size = System::Drawing::Size(1336, 23);
 			this->progressBar1->TabIndex = 2;
-			this->progressBar1->Click += gcnew System::EventHandler(this, &MyForm::progressBar1_Click);
 			// 
 			// button1
 			// 
@@ -152,7 +160,6 @@ namespace ProjektJA {
 			this->menuStrip1->Size = System::Drawing::Size(1360, 24);
 			this->menuStrip1->TabIndex = 4;
 			this->menuStrip1->Text = L"menuStrip1";
-			this->menuStrip1->ItemClicked += gcnew System::Windows::Forms::ToolStripItemClickedEventHandler(this, &MyForm::menuStrip1_ItemClicked);
 			// 
 			// wczytajToolStripMenuItem
 			// 
@@ -171,6 +178,11 @@ namespace ProjektJA {
 			// openFileDialog1
 			// 
 			this->openFileDialog1->FileName = L"openFileDialog1";
+			this->openFileDialog1->FileOk += gcnew System::ComponentModel::CancelEventHandler(this, &MyForm::openFileDialog1_FileOk);
+			// 
+			// saveFileDialog1
+			// 
+			this->saveFileDialog1->FileOk += gcnew System::ComponentModel::CancelEventHandler(this, &MyForm::saveFileDialog1_FileOk);
 			// 
 			// label1
 			// 
@@ -180,7 +192,6 @@ namespace ProjektJA {
 			this->label1->Size = System::Drawing::Size(87, 13);
 			this->label1->TabIndex = 5;
 			this->label1->Text = L"Czas wykonania:";
-			this->label1->Click += gcnew System::EventHandler(this, &MyForm::label1_Click);
 			// 
 			// comboBox1
 			// 
@@ -200,7 +211,6 @@ namespace ProjektJA {
 			this->label2->Size = System::Drawing::Size(29, 13);
 			this->label2->TabIndex = 7;
 			this->label2->Text = L"0 ms";
-			this->label2->Click += gcnew System::EventHandler(this, &MyForm::label2_Click);
 			// 
 			// pictureBox2
 			// 
@@ -209,7 +219,6 @@ namespace ProjektJA {
 			this->pictureBox2->Size = System::Drawing::Size(652, 418);
 			this->pictureBox2->TabIndex = 8;
 			this->pictureBox2->TabStop = false;
-			this->pictureBox2->Click += gcnew System::EventHandler(this, &MyForm::pictureBox2_Click);
 			// 
 			// label3
 			// 
@@ -219,7 +228,6 @@ namespace ProjektJA {
 			this->label3->Size = System::Drawing::Size(124, 13);
 			this->label3->TabIndex = 9;
 			this->label3->Text = L"Zdjêcie przed przeróbk¹:";
-			this->label3->Click += gcnew System::EventHandler(this, &MyForm::label3_Click);
 			// 
 			// label4
 			// 
@@ -229,7 +237,6 @@ namespace ProjektJA {
 			this->label4->Size = System::Drawing::Size(107, 13);
 			this->label4->TabIndex = 10;
 			this->label4->Text = L"Zdjêcie po przeróbce";
-			this->label4->Click += gcnew System::EventHandler(this, &MyForm::label4_Click);
 			// 
 			// MyForm
 			// 
@@ -258,18 +265,13 @@ namespace ProjektJA {
 
 		}
 #pragma endregion
-	private: System::Void pictureBox1_Click(System::Object^ sender, System::EventArgs^ e) 
-	{
-	}
-	private: System::Void pictureBox2_Click(System::Object^ sender, System::EventArgs^ e) 
-	{
-	}
+
 	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) 
 	{
 		auto start = std::chrono::steady_clock::now();
 		if (this->comboBox1->SelectedIndex == 0) //Asembler
 		{
-			
+
 			wykonajASM();
 
 			/*for (int i = 0; i < 1000000; i++)
@@ -294,37 +296,44 @@ namespace ProjektJA {
 			this->label2->Text = czas;
 		}
 	}
-	private: System::Void progressBar1_Click(System::Object^ sender, System::EventArgs^ e) 
-	{
-	}
+
 	private: System::Void openFileDialog1_FileOk(System::Object^ sender, System::ComponentModel::CancelEventArgs^ e) 
 	{
+		//If bitmap is selected
+
+		//TODO: Delete old edited bitmap
+
+		this->loadedBitmap = gcnew Bitmap(openFileDialog1->FileName);
+
+		if(loadedBitmap != nullptr)
+			pictureBox1->Image = loadedBitmap;
+
+		
+
+		ReadBMP klasa(msclr::interop::marshal_as<std::string>(openFileDialog1->FileName));
+		
+		Bitmap^ gray;
+		klasa.getBitmap(gray);
+		this->pictureBox2->Image = gray;
 	}
-	private: System::Void menuStrip1_ItemClicked(System::Object^ sender, System::Windows::Forms::ToolStripItemClickedEventArgs^ e) 
+
+
+	private: System::Void saveFileDialog1_FileOk(System::Object^ sender, System::ComponentModel::CancelEventArgs^ e)
 	{
+
 	}
-	private: System::Void wczytajObrazToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) 
-	{
-	}
+
 	private: System::Void wczytajToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) 
 	{
+		this->openFileDialog1->ShowDialog();
 	}
+
 	private: System::Void zapiszToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) 
 	{
+		//this->saveFileDialog1->ShowDialog(); //TODO
 	}
-	private: System::Void label1_Click(System::Object^ sender, System::EventArgs^ e) 
-	{
-	}
-	private: System::Void label2_Click(System::Object^ sender, System::EventArgs^ e) 
-	{
-	}
+
 	private: System::Void comboBox1_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e) 
-	{
-	}
-	private: System::Void label3_Click(System::Object^ sender, System::EventArgs^ e) 
-	{
-	}
-	private: System::Void label4_Click(System::Object^ sender, System::EventArgs^ e) 
 	{
 	}
 };
