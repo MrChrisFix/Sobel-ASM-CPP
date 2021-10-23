@@ -217,6 +217,7 @@ namespace ProjektJA {
 			this->pictureBox2->Location = System::Drawing::Point(696, 62);
 			this->pictureBox2->Name = L"pictureBox2";
 			this->pictureBox2->Size = System::Drawing::Size(652, 418);
+			this->pictureBox2->SizeMode = System::Windows::Forms::PictureBoxSizeMode::Zoom;
 			this->pictureBox2->TabIndex = 8;
 			this->pictureBox2->TabStop = false;
 			// 
@@ -312,9 +313,8 @@ namespace ProjektJA {
 
 		ReadBMP klasa(msclr::interop::marshal_as<std::string>(openFileDialog1->FileName));
 		
-		Bitmap^ gray;
-		klasa.getBitmap(gray);
-		this->pictureBox2->Image = gray;
+		Bitmap^ gray = klasa.getBitmap();
+		if(gray!=nullptr) this->pictureBox2->Image = gray;
 	}
 
 

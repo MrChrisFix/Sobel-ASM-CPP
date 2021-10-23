@@ -48,7 +48,9 @@ private:
 
 	RGBColour** RGBPixelMatrix;
 
-	char* byteFile;
+	unsigned char* byteFile;
+
+	unsigned char* PixelArray;
 
 
 public:
@@ -58,11 +60,13 @@ public:
 	bool checkIfGray();
 	void changeToGrayScale();
 
-	void getBitmap(System::Drawing::Bitmap^ grayImage);
+	System::Drawing::Bitmap^ getBitmap();
 
 private:
 
 	void distributeByteFile();
+
+	void extractPixelData();
 
 	unsigned __int8 read8(int &byte);
 	unsigned __int16 read16(int &byte);

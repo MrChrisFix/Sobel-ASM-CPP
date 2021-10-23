@@ -11,10 +11,11 @@ ReadBMP::ReadBMP(std::string fileLocation)
 		size_t size = this->File.tellg();
 		this->File.seekg(0, std::ios::beg);
 
-		this->byteFile = new char[size];
+		this->byteFile = new unsigned char[size];
 
 		
-		this->File.read(byteFile, size);	
+		//this->File.read(byteFile, size);	
+		this->File.read(reinterpret_cast<char*>(byteFile), size);	
 
 		//std::cout << byteFile;
 
@@ -34,16 +35,17 @@ ReadBMP::~ReadBMP()
 
 bool ReadBMP::checkIfGray()
 {
-	/*for (int i = 0; i < this->BMPInfoHeader.biWidth; i++)
-		for (int j = 0; j < this->BMPInfoHeader.biHeight; j++)
-			if (this->RGBPixelMatrix[i][j].Blue != this->RGBPixelMatrix[i][j].Green || this->RGBPixelMatrix[i][j].Green != this->RGBPixelMatrix[i][j].Red)
-				return false;*/
-
+	int addtionalPixels = this->BMPInfoHeader.biWidth % 4;
 	size_t currentByte = 0;
-	while (currentByte < this->BMPInfoHeader.biWidth*this->BMPInfoHeader.biHeight)
+
+	for (int y = this->BMPInfoHeader.biHeight - 1; y >= 0; y--)
 	{
-		if (this->byteFile[this->fileHeader.Offset + currentByte] != this->byteFile[this->fileHeader.Offset + currentByte + 1]) return false;
-		else currentByte += 4;
+		for (int x = 0; x < this->BMPInfoHeader.biWidth; x++)
+		{
+			if (this->PixelArray[currentByte + 2] != this->PixelArray[currentByte + 1] || this->PixelArray[currentByte + 1] != this->PixelArray[currentByte]) return false;
+			currentByte += 3;
+		}
+		currentByte += addtionalPixels;
 	}
 
 	return true;
@@ -51,54 +53,81 @@ bool ReadBMP::checkIfGray()
 
 void ReadBMP::changeToGrayScale()
 {
-	//for (int i = 0; i < this->BMPInfoHeader.biWidth; i++)
-	//	for (int j = 0; j < this->BMPInfoHeader.biHeight; j++)
-	//	{
-	//		short average = this->RGBPixelMatrix[i][j].Blue/3 + this->RGBPixelMatrix[i][j].Green/3 + this->RGBPixelMatrix[i][j].Red/3;
-	//		//average > 255 ? average = 255 : average = average;
-	//		//average < 0 ? average = 0 : average = average;
-	//		this->RGBPixelMatrix[i][j].Blue = average;
-	//		this->RGBPixelMatrix[i][j].Green = average;
-	//		this->RGBPixelMatrix[i][j].Red = average;
-	//	}
+	int addtionalPixels = this->BMPInfoHeader.biWidth % 4;
 
 	size_t currentByte = 0;
-	while (currentByte < this->BMPInfoHeader.biWidth * this->BMPInfoHeader.biHeight)
+	/*while (currentByte < this->BMPInfoHeader.biWidth * this->BMPInfoHeader.biHeight)
 	{
 		unsigned char sum =this->byteFile[this->fileHeader.Offset + currentByte] + this->byteFile[this->fileHeader.Offset + currentByte + 1] + this->byteFile[this->fileHeader.Offset + currentByte + 2];
 		unsigned char average = sum / 3;
+		if (average < 0) 
+			std::cout << "Now";
 		this->byteFile[this->fileHeader.Offset + currentByte] = average;
 		this->byteFile[this->fileHeader.Offset + currentByte+1] = average;
 		this->byteFile[this->fileHeader.Offset + currentByte+2] = average;
-		currentByte += 4;
+		currentByte += 3;
+		if ((BMPInfoHeader.biWidth - addtionalPixels) % currentByte == 0) currentByte += addtionalPixels;
+	}*/
+
+	/*while (x < this->BMPInfoHeader.biWidth * this->BMPInfoHeader.biHeight)
+	{
+		unsigned char sum = this->PixelArray[currentByte] + this->PixelArray[currentByte + 1] + this->PixelArray[currentByte + 2];
+		unsigned char average = sum / 3;
+		for (int i = 0; i < 3; i++)
+			this->PixelArray[currentByte + i] = average;
+		currentByte += 3;
+		x++;
+		if ((currentByte* x) % BMPInfoHeader.biWidth  == 0)
+			currentByte += addtionalPixels;
+	}*/
+
+	for (int y = this->BMPInfoHeader.biHeight - 1; y >= 0; y--)
+	{
+		for (int x = 0; x < this->BMPInfoHeader.biWidth; x++)
+		{
+			//unsigned char sum = this->PixelArray[currentByte] + this->PixelArray[currentByte + 1] + this->PixelArray[currentByte + 2];
+
+			float blue = this->PixelArray[currentByte + 2]/255.0f;
+			float green = this->PixelArray[currentByte + 1]/255.0f;
+			float red = this->PixelArray[currentByte]/255.0f;
+
+			float waged = red * 0.2126 + green * 0.7152 + blue * 0.0722; //Good waged grayscale transformation
+
+			for (int i = 0; i < 3; i++)
+				this->PixelArray[currentByte + i] = waged * 255.0f;
+			currentByte += 3;
+		}
+		currentByte += addtionalPixels;
 	}
 
 	//if (checkIfGray()) std::cout << "Szare"; else std::cout << "Nie jest szare";
 }
 
-void ReadBMP::getBitmap(System::Drawing::Bitmap^ grayImage)
+System::Drawing::Bitmap^ ReadBMP::getBitmap()
 {
-	grayImage = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
+	System::Drawing::Bitmap^ greyImage = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
 
-	//grayImage->SetResolution(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
-	
 	size_t currentByte = 0;
-	for(int x =0; x<grayImage->Width; x++)
-		for (int y = 0; y < grayImage->Height; y++)
+	//for (int y = 0; y < greyImage->Height; y++)
+		//for (int x = 0; x < greyImage->Width; x++)
+
+	int addtionalPixels = greyImage->Width % 4;
+
+	for (int y = greyImage->Height - 1; y >= 0; y--)
+	{
+		for (int x = 0; x < greyImage->Width; x++)
 		{
-			grayImage->SetPixel(x, y, System::Drawing::Color::FromArgb(
-				this->byteFile[this->fileHeader.Offset + currentByte + 2],
-				this->byteFile[this->fileHeader.Offset + currentByte + 1],
-				this->byteFile[this->fileHeader.Offset + currentByte]
+			greyImage->SetPixel(x, y, System::Drawing::Color::FromArgb(
+				this->PixelArray[currentByte + 2], this->PixelArray[currentByte + 1], this->PixelArray[currentByte] //all rgb in gray are the same
 			));
-			currentByte += 4;
+			currentByte += 3;
+			if (currentByte > this->BMPInfoHeader.biSizeImage)
+				return greyImage;
 		}
-	//R
-	//this->byteFile[this->fileHeader.Offset+currentByte+2]
-	//G
-	//this->byteFile[this->fileHeader.Offset + currentByte + 1]
-	//B
-	//this->byteFile[this->fileHeader.Offset + currentByte]
+		currentByte += addtionalPixels;
+	}
+
+	return greyImage;
 }
 
 
@@ -130,7 +159,10 @@ void ReadBMP::distributeByteFile()
 	this->BMPInfoHeader.biClrRotation = read8(currentByte);
 	this->BMPInfoHeader.biReserved = read16(currentByte);
 
+	this->extractPixelData();
+
 	if (!checkIfGray()) changeToGrayScale();
+
 
 	/*this->RGBPixelMatrix = new RGBColour * [this->BMPInfoHeader.biWidth];
 	for (int i = 0; i < this->BMPInfoHeader.biWidth; i++)
@@ -145,6 +177,17 @@ void ReadBMP::distributeByteFile()
 		}*/
 
 }
+
+void ReadBMP::extractPixelData()
+{
+	this->PixelArray = new unsigned char[this->BMPInfoHeader.biSizeImage];
+
+	for(size_t i = 0; i< this->BMPInfoHeader.biSizeImage; i++)
+		this->PixelArray[i] = this->byteFile[this->fileHeader.Offset+i];
+}
+
+
+
 
 unsigned __int8 ReadBMP::read8(int& byte) //1 Byte
 {
