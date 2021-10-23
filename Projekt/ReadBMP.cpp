@@ -12,12 +12,8 @@ ReadBMP::ReadBMP(std::string fileLocation)
 		this->File.seekg(0, std::ios::beg);
 
 		this->byteFile = new unsigned char[size];
-
-		
-		//this->File.read(byteFile, size);	
+	
 		this->File.read(reinterpret_cast<char*>(byteFile), size);	
-
-		//std::cout << byteFile;
 
 		this->File.close();
 	}
@@ -26,9 +22,8 @@ ReadBMP::ReadBMP(std::string fileLocation)
 
 ReadBMP::~ReadBMP()
 {
-	/*for (int i = 0; i < this->BMPInfoHeader.biWidth; i++)
-		delete[] this->RGBPixelMatrix[i];
-	delete[] this->RGBPixelMatrix;*/
+	delete[] this->byteFile;
+	delete[] this->PixelArray;
 
 	if (this->File.is_open()) this->File.close();
 }
@@ -56,31 +51,6 @@ void ReadBMP::changeToGrayScale()
 	int addtionalPixels = this->BMPInfoHeader.biWidth % 4;
 
 	size_t currentByte = 0;
-	/*while (currentByte < this->BMPInfoHeader.biWidth * this->BMPInfoHeader.biHeight)
-	{
-		unsigned char sum =this->byteFile[this->fileHeader.Offset + currentByte] + this->byteFile[this->fileHeader.Offset + currentByte + 1] + this->byteFile[this->fileHeader.Offset + currentByte + 2];
-		unsigned char average = sum / 3;
-		if (average < 0) 
-			std::cout << "Now";
-		this->byteFile[this->fileHeader.Offset + currentByte] = average;
-		this->byteFile[this->fileHeader.Offset + currentByte+1] = average;
-		this->byteFile[this->fileHeader.Offset + currentByte+2] = average;
-		currentByte += 3;
-		if ((BMPInfoHeader.biWidth - addtionalPixels) % currentByte == 0) currentByte += addtionalPixels;
-	}*/
-
-	/*while (x < this->BMPInfoHeader.biWidth * this->BMPInfoHeader.biHeight)
-	{
-		unsigned char sum = this->PixelArray[currentByte] + this->PixelArray[currentByte + 1] + this->PixelArray[currentByte + 2];
-		unsigned char average = sum / 3;
-		for (int i = 0; i < 3; i++)
-			this->PixelArray[currentByte + i] = average;
-		currentByte += 3;
-		x++;
-		if ((currentByte* x) % BMPInfoHeader.biWidth  == 0)
-			currentByte += addtionalPixels;
-	}*/
-
 	for (int y = this->BMPInfoHeader.biHeight - 1; y >= 0; y--)
 	{
 		for (int x = 0; x < this->BMPInfoHeader.biWidth; x++)
@@ -108,9 +78,6 @@ System::Drawing::Bitmap^ ReadBMP::getBitmap()
 	System::Drawing::Bitmap^ greyImage = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
 
 	size_t currentByte = 0;
-	//for (int y = 0; y < greyImage->Height; y++)
-		//for (int x = 0; x < greyImage->Width; x++)
-
 	int addtionalPixels = greyImage->Width % 4;
 
 	for (int y = greyImage->Height - 1; y >= 0; y--)
@@ -162,19 +129,6 @@ void ReadBMP::distributeByteFile()
 	this->extractPixelData();
 
 	if (!checkIfGray()) changeToGrayScale();
-
-
-	/*this->RGBPixelMatrix = new RGBColour * [this->BMPInfoHeader.biWidth];
-	for (int i = 0; i < this->BMPInfoHeader.biWidth; i++)
-		this->RGBPixelMatrix[i] = new RGBColour[this->BMPInfoHeader.biWidth];
-
-	for (int i = 0; i < this->BMPInfoHeader.biWidth; i++)
-		for (int j = 0; j < this->BMPInfoHeader.biHeight; j++)
-		{
-			this->RGBPixelMatrix[i][j].Blue = this->File.get();
-			this->RGBPixelMatrix[i][j].Green = this->File.get();
-			this->RGBPixelMatrix[i][j].Red = this->File.get();
-		}*/
 
 }
 

@@ -52,7 +52,6 @@ private:
 
 	unsigned char* PixelArray;
 
-
 public:
 	ReadBMP(std::string fileLocation);
 	~ReadBMP();
