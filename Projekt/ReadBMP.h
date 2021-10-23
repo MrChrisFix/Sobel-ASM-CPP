@@ -3,14 +3,6 @@
 #include <fstream>
 #include <iostream>
 
-struct RGBColour
-{
-	BYTE Blue;
-	BYTE Green;
-	BYTE Red;
-	BYTE Reserved;
-};
-
 class ReadBMP
 {
 private:
@@ -46,8 +38,6 @@ private:
 private:
 	std::ifstream File;
 
-	RGBColour** RGBPixelMatrix;
-
 	unsigned char* byteFile;
 
 	unsigned char* PixelArray;
@@ -56,12 +46,16 @@ public:
 	ReadBMP(std::string fileLocation);
 	~ReadBMP();
 
-	bool checkIfGray();
-	void changeToGrayScale();
-
 	System::Drawing::Bitmap^ getBitmap();
 
+	System::Drawing::Bitmap^ createBitmap(BYTE** PixelArray);
+
+	unsigned char getPixelArray();
+
 private:
+
+	bool checkIfGray();
+	void changeToGrayScale();
 
 	void distributeByteFile();
 

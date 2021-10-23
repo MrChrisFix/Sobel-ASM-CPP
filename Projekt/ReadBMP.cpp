@@ -28,50 +28,6 @@ ReadBMP::~ReadBMP()
 	if (this->File.is_open()) this->File.close();
 }
 
-bool ReadBMP::checkIfGray()
-{
-	int addtionalPixels = this->BMPInfoHeader.biWidth % 4;
-	size_t currentByte = 0;
-
-	for (int y = this->BMPInfoHeader.biHeight - 1; y >= 0; y--)
-	{
-		for (int x = 0; x < this->BMPInfoHeader.biWidth; x++)
-		{
-			if (this->PixelArray[currentByte + 2] != this->PixelArray[currentByte + 1] || this->PixelArray[currentByte + 1] != this->PixelArray[currentByte]) return false;
-			currentByte += 3;
-		}
-		currentByte += addtionalPixels;
-	}
-
-	return true;
-}
-
-void ReadBMP::changeToGrayScale()
-{
-	int addtionalPixels = this->BMPInfoHeader.biWidth % 4;
-
-	size_t currentByte = 0;
-	for (int y = this->BMPInfoHeader.biHeight - 1; y >= 0; y--)
-	{
-		for (int x = 0; x < this->BMPInfoHeader.biWidth; x++)
-		{
-			//unsigned char sum = this->PixelArray[currentByte] + this->PixelArray[currentByte + 1] + this->PixelArray[currentByte + 2];
-
-			float blue = this->PixelArray[currentByte + 2]/255.0f;
-			float green = this->PixelArray[currentByte + 1]/255.0f;
-			float red = this->PixelArray[currentByte]/255.0f;
-
-			float waged = red * 0.2126 + green * 0.7152 + blue * 0.0722; //Good waged grayscale transformation
-
-			for (int i = 0; i < 3; i++)
-				this->PixelArray[currentByte + i] = waged * 255.0f;
-			currentByte += 3;
-		}
-		currentByte += addtionalPixels;
-	}
-
-	//if (checkIfGray()) std::cout << "Szare"; else std::cout << "Nie jest szare";
-}
 
 System::Drawing::Bitmap^ ReadBMP::getBitmap()
 {
@@ -95,6 +51,34 @@ System::Drawing::Bitmap^ ReadBMP::getBitmap()
 	}
 
 	return greyImage;
+}
+
+System::Drawing::Bitmap^ ReadBMP::createBitmap(BYTE** PixelArray)
+{
+	System::Drawing::Bitmap^ Image = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
+
+	size_t currentByte = 0;
+
+	for (int y = Image->Height - 1; y >= 0; y--)
+	{
+		for (int x = 0; x < Image->Width; x++)
+		{
+			Image->SetPixel(x, y, System::Drawing::Color::FromArgb(
+				this->PixelArray[currentByte], this->PixelArray[currentByte], this->PixelArray[currentByte] //all rgb in gray are the same
+			));
+			currentByte ++;
+			if (currentByte > this->BMPInfoHeader.biSizeImage)
+				return Image;
+		}
+	}
+
+	return Image;
+
+}
+
+unsigned char ReadBMP::getPixelArray()
+{
+	return *this->PixelArray;
 }
 
 
@@ -140,6 +124,50 @@ void ReadBMP::extractPixelData()
 		this->PixelArray[i] = this->byteFile[this->fileHeader.Offset+i];
 }
 
+bool ReadBMP::checkIfGray()
+{
+	int addtionalPixels = this->BMPInfoHeader.biWidth % 4;
+	size_t currentByte = 0;
+
+	for (int y = this->BMPInfoHeader.biHeight - 1; y >= 0; y--)
+	{
+		for (int x = 0; x < this->BMPInfoHeader.biWidth; x++)
+		{
+			if (this->PixelArray[currentByte + 2] != this->PixelArray[currentByte + 1] || this->PixelArray[currentByte + 1] != this->PixelArray[currentByte]) return false;
+			currentByte += 3;
+		}
+		currentByte += addtionalPixels;
+	}
+
+	return true;
+}
+
+void ReadBMP::changeToGrayScale()
+{
+	int addtionalPixels = this->BMPInfoHeader.biWidth % 4;
+
+	size_t currentByte = 0;
+	for (int y = this->BMPInfoHeader.biHeight - 1; y >= 0; y--)
+	{
+		for (int x = 0; x < this->BMPInfoHeader.biWidth; x++)
+		{
+			//unsigned char sum = this->PixelArray[currentByte] + this->PixelArray[currentByte + 1] + this->PixelArray[currentByte + 2];
+
+			float blue = this->PixelArray[currentByte + 2] / 255.0f;
+			float green = this->PixelArray[currentByte + 1] / 255.0f;
+			float red = this->PixelArray[currentByte] / 255.0f;
+
+			float waged = red * 0.2126 + green * 0.7152 + blue * 0.0722; //Good waged grayscale transformation
+
+			for (int i = 0; i < 3; i++)
+				this->PixelArray[currentByte + i] = waged * 255.0f;
+			currentByte += 3;
+		}
+		currentByte += addtionalPixels;
+	}
+
+	//if (checkIfGray()) std::cout << "Szare"; else std::cout << "Nie jest szare";
+}
 
 
 

@@ -7,6 +7,6 @@
 #define CPPDLL_API __declspec(dllimport)
 #endif
 
-extern "C" CPPDLL_API void tangensMilion();
+extern "C" CPPDLL_API void tangensMilion(); //TODO: delete this
 
-//void CPPDLL_API __stdcall  tangensMilion();
+extern "C" CPPDLL_API BYTE** Sobel(BYTE** PixelArray, int arraySize, int numerOfThreads, int imageHeight, int imageWidth);

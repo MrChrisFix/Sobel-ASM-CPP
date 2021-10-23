@@ -272,11 +272,7 @@ namespace ProjektJA {
 		auto start = std::chrono::steady_clock::now();
 		if (this->comboBox1->SelectedIndex == 0) //Asembler
 		{
-
 			wykonajASM();
-
-			/*for (int i = 0; i < 1000000; i++)
-				auto tangens = tan(i);*/
 		}
 		else if (this->comboBox1->SelectedIndex == 1) //C++
 		{
@@ -314,7 +310,9 @@ namespace ProjektJA {
 		ReadBMP klasa(msclr::interop::marshal_as<std::string>(openFileDialog1->FileName));
 		
 		Bitmap^ gray = klasa.getBitmap();
-		if(gray!=nullptr) this->pictureBox2->Image = gray;
+		//if(gray!=nullptr) this->pictureBox2->Image = gray;
+		
+		//Bitmap^ sobelCpp = klasa.createBitmap(Sobel())
 	}
 
 
