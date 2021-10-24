@@ -1,8 +1,8 @@
 #include "pch.h"
-#include "ReadBMP.h"
+#include "BMPManager.h"
 #include <vector>
 
-ReadBMP::ReadBMP(std::string fileLocation)
+BMPManager::BMPManager(std::string fileLocation)
 {
 	this->File.open(fileLocation, std::ios::in | std::ios::binary | std::ios::ate);
 
@@ -20,7 +20,7 @@ ReadBMP::ReadBMP(std::string fileLocation)
 	this->distributeByteFile();
 }
 
-ReadBMP::~ReadBMP()
+BMPManager::~BMPManager()
 {
 	delete[] this->byteFile;
 	delete[] this->PixelArray;
@@ -29,7 +29,7 @@ ReadBMP::~ReadBMP()
 }
 
 
-System::Drawing::Bitmap^ ReadBMP::getBitmap()
+System::Drawing::Bitmap^ BMPManager::getBitmap()
 {
 	System::Drawing::Bitmap^ greyImage = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
 
@@ -53,7 +53,38 @@ System::Drawing::Bitmap^ ReadBMP::getBitmap()
 	return greyImage;
 }
 
-System::Drawing::Bitmap^ ReadBMP::createBitmap(BYTE** PixelArray)
+System::Drawing::Bitmap^ BMPManager::getBitmap2()
+{
+	System::Drawing::Bitmap^ grayImage = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
+
+	System::Drawing::Rectangle rect = System::Drawing::Rectangle(0, 0, grayImage->Width, grayImage->Height);
+
+	System::Drawing::Imaging::BitmapData^ imageData = grayImage->LockBits(rect, System::Drawing::Imaging::ImageLockMode::WriteOnly, System::Drawing::Imaging::PixelFormat::Format24bppRgb);
+
+
+	int length = imageData->Stride * imageData->Height;
+
+	array<BYTE>^ bytes = gcnew array<BYTE>(length);
+
+	int row = 4, column = 0;;
+	for (int i = 0; i < length; i++, column++)
+	{
+		if (i != 0 && i % imageData->Width == 0) { row--, column = 0; };
+		bytes[i] = this->PixelArray[row*(imageData->Width)+column];
+	}
+
+	System::Runtime::InteropServices::Marshal::Copy( bytes, 0, imageData->Scan0, length);
+
+	grayImage->UnlockBits(imageData);
+
+	return grayImage;
+}
+
+
+
+
+
+System::Drawing::Bitmap^ BMPManager::createBitmap(BYTE** PixelArray)
 {
 	System::Drawing::Bitmap^ Image = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
 
@@ -76,14 +107,14 @@ System::Drawing::Bitmap^ ReadBMP::createBitmap(BYTE** PixelArray)
 
 }
 
-unsigned char ReadBMP::getPixelArray()
+unsigned char BMPManager::getPixelArray()
 {
 	return *this->PixelArray;
 }
 
 
 
-void ReadBMP::distributeByteFile()
+void BMPManager::distributeByteFile()
 {
 	int currentByte = 0;
 
@@ -116,7 +147,7 @@ void ReadBMP::distributeByteFile()
 
 }
 
-void ReadBMP::extractPixelData()
+void BMPManager::extractPixelData()
 {
 	this->PixelArray = new unsigned char[this->BMPInfoHeader.biSizeImage];
 
@@ -124,7 +155,7 @@ void ReadBMP::extractPixelData()
 		this->PixelArray[i] = this->byteFile[this->fileHeader.Offset+i];
 }
 
-bool ReadBMP::checkIfGray()
+bool BMPManager::checkIfGray()
 {
 	int addtionalPixels = this->BMPInfoHeader.biWidth % 4;
 	size_t currentByte = 0;
@@ -142,7 +173,7 @@ bool ReadBMP::checkIfGray()
 	return true;
 }
 
-void ReadBMP::changeToGrayScale()
+void BMPManager::changeToGrayScale()
 {
 	int addtionalPixels = this->BMPInfoHeader.biWidth % 4;
 
@@ -171,14 +202,14 @@ void ReadBMP::changeToGrayScale()
 
 
 
-unsigned __int8 ReadBMP::read8(int& byte) //1 Byte
+unsigned __int8 BMPManager::read8(int& byte) //1 Byte
 {
 	unsigned __int8 b0;
 	b0 = this->byteFile[byte++];
 	return b0;
 }
 
-unsigned __int16 ReadBMP::read16(int& byte) //2 Bytes
+unsigned __int16 BMPManager::read16(int& byte) //2 Bytes
 {
 	unsigned __int8 b0, b1;
 
@@ -188,7 +219,7 @@ unsigned __int16 ReadBMP::read16(int& byte) //2 Bytes
 	return ((b1<<8)|b0);
 }
 
-unsigned __int32 ReadBMP::read32(int& byte) //4 Bytes
+unsigned __int32 BMPManager::read32(int& byte) //4 Bytes
 {
 	unsigned __int8 b0, b1, b2, b3;
 

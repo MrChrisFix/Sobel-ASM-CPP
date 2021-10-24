@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 
-class ReadBMP
+class BMPManager
 {
 private:
 	struct fHead
@@ -43,10 +43,12 @@ private:
 	unsigned char* PixelArray;
 
 public:
-	ReadBMP(std::string fileLocation);
-	~ReadBMP();
+	BMPManager(std::string fileLocation);
+	~BMPManager();
 
 	System::Drawing::Bitmap^ getBitmap();
+
+	System::Drawing::Bitmap^ getBitmap2();
 
 	System::Drawing::Bitmap^ createBitmap(BYTE** PixelArray);
 

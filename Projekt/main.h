@@ -4,7 +4,7 @@
 #include <msclr/marshal_cppstd.h>
 
 #include "CppDLL.h"
-#include "ReadBMP.h"
+#include "BMPManager.h"
 
 namespace ProjektJA {
 
@@ -307,10 +307,19 @@ namespace ProjektJA {
 
 		
 
-		ReadBMP klasa(msclr::interop::marshal_as<std::string>(openFileDialog1->FileName));
-		
+		BMPManager klasa(msclr::interop::marshal_as<std::string>(openFileDialog1->FileName));
+
 		Bitmap^ gray = klasa.getBitmap();
-		//if(gray!=nullptr) this->pictureBox2->Image = gray;
+
+		if(gray!=nullptr) this->pictureBox2->Image = gray;
+
+
+
+		//System::Drawing::Imaging::BitmapData^ bmpData = gray->LockBits(System::Drawing::Rectangle(0, 0, gray->Width, gray->Height), System::Drawing::Imaging::ImageLockMode::ReadOnly, gray->PixelFormat);
+
+		//std::cout << bmpData->Stride;
+
+		//Bitmap^ nowa = gcnew Bitmap(gray->Width, gray->Height, System::Drawing::Imaging::PixelFormat::Format24bppRgb, )
 		
 		//Bitmap^ sobelCpp = klasa.createBitmap(Sobel())
 	}

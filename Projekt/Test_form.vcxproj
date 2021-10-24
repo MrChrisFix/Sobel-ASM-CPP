@@ -128,13 +128,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ReadBMP.cpp" />
+    <ClCompile Include="BMPManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="ReadBMP.h" />
+    <ClInclude Include="BMPManager.h" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="main.resx">
