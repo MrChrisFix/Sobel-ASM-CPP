@@ -48,9 +48,7 @@ public:
 	BMPManager(std::string fileLocation);
 	~BMPManager();
 
-	System::Drawing::Bitmap^ getBitmap();
-
-	System::Drawing::Bitmap^ getBitmap2();
+	System::Drawing::Bitmap^ getBitmap(); //Only for debug
 
 	System::Drawing::Bitmap^ createBitmap(BYTE** PixelArray);
 

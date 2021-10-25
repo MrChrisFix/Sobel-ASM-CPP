@@ -260,9 +260,9 @@ namespace ProjektJA {
 			this->label5->AutoSize = true;
 			this->label5->Location = System::Drawing::Point(50, 491);
 			this->label5->Name = L"label5";
-			this->label5->Size = System::Drawing::Size(47, 13);
+			this->label5->Size = System::Drawing::Size(53, 13);
 			this->label5->TabIndex = 12;
-			this->label5->Text = L"Bibliteka";
+			this->label5->Text = L"Biblioteka";
 			// 
 			// label6
 			// 
@@ -350,11 +350,13 @@ namespace ProjektJA {
 
 		if(gray!=nullptr) this->pictureBox2->Image = gray;
 
-		Bitmap^ test = klasa.createBitmap(klasa.getPixelArray2D());
+		//Bitmap^ test = klasa.createBitmap(klasa.getPixelArray2D());
 
-		if (test != nullptr) this->pictureBox2->Image = test;
+		//if (test != nullptr) this->pictureBox2->Image = test;
 		
-		//Bitmap^ sobelCpp = klasa.createBitmap(Sobel())
+		//Bitmap^ sobelCpp = klasa.createBitmap(Sobel(klasa.getPixelArray2D(), 1, 1, klasa.getHeight(), klasa.getHeight()));
+
+		//if (sobelCpp != nullptr) this->pictureBox2->Image = sobelCpp;
 	}
 
 

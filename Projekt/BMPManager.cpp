@@ -25,35 +25,12 @@ BMPManager::~BMPManager()
 	delete[] this->byteFile;
 	delete[] this->PixelArray;
 
+	//TODO: delete PixelArray2D
+
 	if (this->File.is_open()) this->File.close();
 }
 
-
-System::Drawing::Bitmap^ BMPManager::getBitmap() //Not used anymore
-{
-	System::Drawing::Bitmap^ greyImage = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
-
-	size_t currentByte = 0;
-	int addtionalPixels = greyImage->Width % 4;
-
-	for (int y = greyImage->Height - 1; y >= 0; y--)
-	{
-		for (int x = 0; x < greyImage->Width; x++)
-		{
-			greyImage->SetPixel(x, y, System::Drawing::Color::FromArgb(
-				this->PixelArray[currentByte + 2], this->PixelArray[currentByte + 1], this->PixelArray[currentByte] //all rgb in gray are the same
-			));
-			currentByte += 3;
-			if (currentByte > this->BMPInfoHeader.biSizeImage)
-				return greyImage;
-		}
-		currentByte += addtionalPixels;
-	}
-
-	return greyImage;
-}
-
-System::Drawing::Bitmap^ BMPManager::getBitmap2()
+System::Drawing::Bitmap^ BMPManager::getBitmap() //Only for debug
 {
 	System::Drawing::Bitmap^ grayImage = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
 
@@ -66,11 +43,23 @@ System::Drawing::Bitmap^ BMPManager::getBitmap2()
 
 	array<BYTE>^ bytes = gcnew array<BYTE>(length);
 
-	int row = 4, column = 0;;
+	/*int row = 4, column = 0;;
 	for (int i = 0; i < length; i++, column++)
 	{
 		if (i != 0 && i % imageData->Width == 0) { row--, column = 0; };
 		bytes[i] = this->PixelArray[row*(imageData->Width)+column];
+	}*/
+
+	int currentByte = 0;
+	int addtionalPixels = grayImage->Width % 4;
+	for (int y = imageData->Height - 1; y >= 0; y--)
+	{
+		for (int x = 0; x < imageData->Stride; x++)
+		{
+			bytes[currentByte] = this->PixelArray[y*imageData->Stride+x];
+			currentByte++;
+		}
+		//currentByte += addtionalPixels;
 	}
 
 	System::Runtime::InteropServices::Marshal::Copy( bytes, 0, imageData->Scan0, length);
@@ -95,13 +84,13 @@ System::Drawing::Bitmap^ BMPManager::createBitmap(BYTE** PixelArray)
 
 	array<BYTE>^ bytes = gcnew array<BYTE>(length);
 
-	size_t currentByte = 0;
+	int currentByte = 0;
 	int addtionalPixels = Image->Width % 4;
 	for (int y = imageData->Height - 1; y >= 0; y--)
 	{
 		for (int x = 0; x < imageData->Stride; x++)
 		{
-			bytes[currentByte] = this->PixelArray2D[x][y];
+			bytes[currentByte] = PixelArray[x][y];
 			currentByte++;
 		}
 		//currentByte += addtionalPixels;
@@ -232,7 +221,7 @@ void BMPManager::changeToGrayScale()
 			float green = this->PixelArray[currentByte + 1] / 255.0f;
 			float red = this->PixelArray[currentByte] / 255.0f;
 
-			float waged = red * 0.2126 + green * 0.7152 + blue * 0.0722; //Good waged grayscale transformation
+			float waged = red * 0.2126f + green * 0.7152f + blue * 0.0722f; //Good waged grayscale transformation
 
 			for (int i = 0; i < 3; i++)
 				this->PixelArray[currentByte + i] = waged * 255.0f;
