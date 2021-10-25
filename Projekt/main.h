@@ -3,6 +3,8 @@
 #include <windows.h> 
 #include <msclr/marshal_cppstd.h>
 
+#include "Listener.h"
+
 #include "CppDLL.h"
 #include "BMPManager.h"
 
@@ -24,11 +26,8 @@ namespace ProjektJA {
 		//ASM
 		typedef int (*FunkcjaASM_t)(); //drugi nawias na argumenty
 		FunkcjaASM_t wykonajASM;
-	private: System::Windows::Forms::ComboBox^ comboBox2;
-	private: System::Windows::Forms::Label^ label5;
-	private: System::Windows::Forms::Label^ label6;
 
-		Bitmap^ loadedBitmap;
+		Listener^ listener;
 
 	public:
 		MyForm(void)
@@ -44,6 +43,8 @@ namespace ProjektJA {
 			this->openFileDialog1->FileName = "";
 			this->openFileDialog1->Filter = "Bitmaps|*.bmp";
 			loadAsmDLL();
+
+			this->listener = gcnew Listener();
 		}
 
 	protected:
@@ -57,7 +58,7 @@ namespace ProjektJA {
 				delete components;
 			}
 
-			if (this->loadedBitmap != nullptr) delete this->loadedBitmap;
+			delete this->listener;
 		}
 		void loadAsmDLL()
 		{
@@ -92,6 +93,9 @@ namespace ProjektJA {
 	private: System::Windows::Forms::Label^ label2;
 	private: System::Windows::Forms::Label^ label3;
 	private: System::Windows::Forms::Label^ label4;
+	private: System::Windows::Forms::ComboBox^ comboBox2;
+	private: System::Windows::Forms::Label^ label5;
+	private: System::Windows::Forms::Label^ label6;
 
 	protected:
 
@@ -306,55 +310,34 @@ namespace ProjektJA {
 
 	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) 
 	{
-		auto start = std::chrono::steady_clock::now();
-		if (this->comboBox1->SelectedIndex == 0) //Asembler
+
+		auto elapsedSeconds = this->listener->reactOnStartButton(this->comboBox1->SelectedIndex, this->comboBox2->SelectedIndex, this->pictureBox2);
+
+		if (elapsedSeconds.count() > 0.01)
 		{
-			wykonajASM();
-		}
-		else if (this->comboBox1->SelectedIndex == 1) //C++
-		{
-			//Otworzyc biblioteke C++ i wykoanc algorytm
-
-			tangensMilion();
-		}
-		auto end = std::chrono::steady_clock::now();
-
-		//this->progressBar1->Value +=; //Tak sie ustawia progressbar
-
-		std::chrono::duration<double> elapsed_seconds = end - start;
-
-		elapsed_seconds *= 1000;
-		if (elapsed_seconds.count() > 0.01)
-		{
-			auto czas = L"" + elapsed_seconds.count() + " ms";
+			auto czas = L"" + elapsedSeconds.count() + " ms";
 			this->label2->Text = czas;
 		}
+
 	}
 
 	private: System::Void openFileDialog1_FileOk(System::Object^ sender, System::ComponentModel::CancelEventArgs^ e) 
 	{
-		//If bitmap is selected
+		auto image = this->listener->reactOnFileSelected(this->openFileDialog1->FileName);
 
-		//TODO: Delete old edited bitmap
+		if(image != nullptr)
+			pictureBox1->Image = image;
 
-		this->loadedBitmap = gcnew Bitmap(openFileDialog1->FileName);
 
-		if(loadedBitmap != nullptr)
-			pictureBox1->Image = loadedBitmap;
+		//Bitmap^ gray = klasa.getBitmap();
 
-		
-
-		BMPManager klasa(msclr::interop::marshal_as<std::string>(openFileDialog1->FileName));
-
-		Bitmap^ gray = klasa.getBitmap();
-
-		if(gray!=nullptr) this->pictureBox2->Image = gray;
+		//if(gray!=nullptr) this->pictureBox2->Image = gray;
 
 		//Bitmap^ test = klasa.createBitmap(klasa.getPixelArray2D());
 
 		//if (test != nullptr) this->pictureBox2->Image = test;
 		
-		//Bitmap^ sobelCpp = klasa.createBitmap(Sobel(klasa.getPixelArray2D(), 1, 1, klasa.getHeight(), klasa.getHeight()));
+		//Bitmap^ sobelCpp = klasa.createBitmap(Sobel(klasa.getPixelArray2D(), 1, klasa.getHeight(), klasa.getHeight()));
 
 		//if (sobelCpp != nullptr) this->pictureBox2->Image = sobelCpp;
 	}

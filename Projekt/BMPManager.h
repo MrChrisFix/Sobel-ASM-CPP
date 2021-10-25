@@ -50,7 +50,7 @@ public:
 
 	System::Drawing::Bitmap^ getBitmap(); //Only for debug
 
-	System::Drawing::Bitmap^ createBitmap(BYTE** PixelArray);
+	System::Drawing::Bitmap^ createBitmap(unsigned char** PixelArray);
 
 	unsigned char* getPixelArray();
 	unsigned char** getPixelArray2D();

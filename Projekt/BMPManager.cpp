@@ -71,7 +71,7 @@ System::Drawing::Bitmap^ BMPManager::getBitmap() //Only for debug
 
 
 
-System::Drawing::Bitmap^ BMPManager::createBitmap(BYTE** PixelArray)
+System::Drawing::Bitmap^ BMPManager::createBitmap(unsigned char** PixelArray)
 {
 	System::Drawing::Bitmap^ Image = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
 

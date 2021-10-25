@@ -9,4 +9,4 @@
 
 extern "C" CPPDLL_API void tangensMilion(); //TODO: delete this
 
-extern "C" CPPDLL_API BYTE** Sobel(BYTE** PixelArray, int arraySize, int numerOfThreads, int imageHeight, int imageWidth);
+extern "C" CPPDLL_API BYTE** Sobel(BYTE** PixelArray, int arraySize, int imageHeight, int imageWidth);

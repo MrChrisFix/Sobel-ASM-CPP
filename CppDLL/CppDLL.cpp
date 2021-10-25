@@ -12,7 +12,7 @@ Expo void tangensMilion()
 	return;
 }
 
-Expo BYTE** Sobel(BYTE** PixelArray, int arraySize, int numerOfThreads, int imageHeight, int imageWidth)
+Expo BYTE** Sobel(BYTE** PixelArray, int arraySize, int imageHeight, int imageWidth)
 {
 	int GxMatrix[9] = { 1,0,-1,2,0,-2,1,0,-2 };
 	int GyMatrix[9] = { 1,2,1,0,0,0,-1,-2,-1 };
