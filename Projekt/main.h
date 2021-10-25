@@ -24,6 +24,9 @@ namespace ProjektJA {
 		//ASM
 		typedef int (*FunkcjaASM_t)(); //drugi nawias na argumenty
 		FunkcjaASM_t wykonajASM;
+	private: System::Windows::Forms::ComboBox^ comboBox2;
+	private: System::Windows::Forms::Label^ label5;
+	private: System::Windows::Forms::Label^ label6;
 
 		Bitmap^ loadedBitmap;
 
@@ -35,6 +38,7 @@ namespace ProjektJA {
 			//TODO: W tym miejscu dodaj kod konstruktora
 			//
 			this->comboBox1->SelectedIndex = 0;
+			this->comboBox2->SelectedIndex = 0;
 			
 			this->openFileDialog1->Title = "Wybierz obraz";
 			this->openFileDialog1->FileName = "";
@@ -118,6 +122,9 @@ namespace ProjektJA {
 			this->pictureBox2 = (gcnew System::Windows::Forms::PictureBox());
 			this->label3 = (gcnew System::Windows::Forms::Label());
 			this->label4 = (gcnew System::Windows::Forms::Label());
+			this->comboBox2 = (gcnew System::Windows::Forms::ComboBox());
+			this->label5 = (gcnew System::Windows::Forms::Label());
+			this->label6 = (gcnew System::Windows::Forms::Label());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBox1))->BeginInit();
 			this->menuStrip1->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBox2))->BeginInit();
@@ -128,20 +135,20 @@ namespace ProjektJA {
 			this->pictureBox1->Location = System::Drawing::Point(12, 62);
 			this->pictureBox1->Name = L"pictureBox1";
 			this->pictureBox1->Size = System::Drawing::Size(652, 418);
-			this->pictureBox1->SizeMode = System::Windows::Forms::PictureBoxSizeMode::Zoom;
+			this->pictureBox1->SizeMode = System::Windows::Forms::PictureBoxSizeMode::StretchImage;
 			this->pictureBox1->TabIndex = 0;
 			this->pictureBox1->TabStop = false;
 			// 
 			// progressBar1
 			// 
-			this->progressBar1->Location = System::Drawing::Point(12, 519);
+			this->progressBar1->Location = System::Drawing::Point(12, 536);
 			this->progressBar1->Name = L"progressBar1";
 			this->progressBar1->Size = System::Drawing::Size(1336, 23);
 			this->progressBar1->TabIndex = 2;
 			// 
 			// button1
 			// 
-			this->button1->Location = System::Drawing::Point(160, 490);
+			this->button1->Location = System::Drawing::Point(208, 506);
 			this->button1->Name = L"button1";
 			this->button1->Size = System::Drawing::Size(75, 23);
 			this->button1->TabIndex = 3;
@@ -187,7 +194,7 @@ namespace ProjektJA {
 			// label1
 			// 
 			this->label1->AutoSize = true;
-			this->label1->Location = System::Drawing::Point(251, 495);
+			this->label1->Location = System::Drawing::Point(299, 511);
 			this->label1->Name = L"label1";
 			this->label1->Size = System::Drawing::Size(87, 13);
 			this->label1->TabIndex = 5;
@@ -197,7 +204,7 @@ namespace ProjektJA {
 			// 
 			this->comboBox1->FormattingEnabled = true;
 			this->comboBox1->Items->AddRange(gcnew cli::array< System::Object^  >(2) { L"Asembler", L"C++" });
-			this->comboBox1->Location = System::Drawing::Point(11, 490);
+			this->comboBox1->Location = System::Drawing::Point(13, 507);
 			this->comboBox1->Name = L"comboBox1";
 			this->comboBox1->Size = System::Drawing::Size(121, 21);
 			this->comboBox1->TabIndex = 6;
@@ -206,7 +213,7 @@ namespace ProjektJA {
 			// label2
 			// 
 			this->label2->AutoSize = true;
-			this->label2->Location = System::Drawing::Point(344, 495);
+			this->label2->Location = System::Drawing::Point(392, 511);
 			this->label2->Name = L"label2";
 			this->label2->Size = System::Drawing::Size(29, 13);
 			this->label2->TabIndex = 7;
@@ -217,7 +224,7 @@ namespace ProjektJA {
 			this->pictureBox2->Location = System::Drawing::Point(696, 62);
 			this->pictureBox2->Name = L"pictureBox2";
 			this->pictureBox2->Size = System::Drawing::Size(652, 418);
-			this->pictureBox2->SizeMode = System::Windows::Forms::PictureBoxSizeMode::Zoom;
+			this->pictureBox2->SizeMode = System::Windows::Forms::PictureBoxSizeMode::StretchImage;
 			this->pictureBox2->TabIndex = 8;
 			this->pictureBox2->TabStop = false;
 			// 
@@ -239,11 +246,41 @@ namespace ProjektJA {
 			this->label4->TabIndex = 10;
 			this->label4->Text = L"Zdjêcie po przeróbce";
 			// 
+			// comboBox2
+			// 
+			this->comboBox2->FormattingEnabled = true;
+			this->comboBox2->Items->AddRange(gcnew cli::array< System::Object^  >(6) { L"1", L"2", L"4", L"8", L"16", L"32" });
+			this->comboBox2->Location = System::Drawing::Point(140, 507);
+			this->comboBox2->Name = L"comboBox2";
+			this->comboBox2->Size = System::Drawing::Size(56, 21);
+			this->comboBox2->TabIndex = 11;
+			// 
+			// label5
+			// 
+			this->label5->AutoSize = true;
+			this->label5->Location = System::Drawing::Point(50, 491);
+			this->label5->Name = L"label5";
+			this->label5->Size = System::Drawing::Size(47, 13);
+			this->label5->TabIndex = 12;
+			this->label5->Text = L"Bibliteka";
+			// 
+			// label6
+			// 
+			this->label6->AutoSize = true;
+			this->label6->Location = System::Drawing::Point(150, 491);
+			this->label6->Name = L"label6";
+			this->label6->Size = System::Drawing::Size(35, 13);
+			this->label6->TabIndex = 13;
+			this->label6->Text = L"W¹tki";
+			// 
 			// MyForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(1360, 554);
+			this->ClientSize = System::Drawing::Size(1360, 570);
+			this->Controls->Add(this->label6);
+			this->Controls->Add(this->label5);
+			this->Controls->Add(this->comboBox2);
 			this->Controls->Add(this->label4);
 			this->Controls->Add(this->label3);
 			this->Controls->Add(this->pictureBox2);
@@ -313,13 +350,9 @@ namespace ProjektJA {
 
 		if(gray!=nullptr) this->pictureBox2->Image = gray;
 
+		Bitmap^ test = klasa.createBitmap(klasa.getPixelArray2D());
 
-
-		//System::Drawing::Imaging::BitmapData^ bmpData = gray->LockBits(System::Drawing::Rectangle(0, 0, gray->Width, gray->Height), System::Drawing::Imaging::ImageLockMode::ReadOnly, gray->PixelFormat);
-
-		//std::cout << bmpData->Stride;
-
-		//Bitmap^ nowa = gcnew Bitmap(gray->Width, gray->Height, System::Drawing::Imaging::PixelFormat::Format24bppRgb, )
+		if (test != nullptr) this->pictureBox2->Image = test;
 		
 		//Bitmap^ sobelCpp = klasa.createBitmap(Sobel())
 	}

@@ -42,6 +42,8 @@ private:
 
 	unsigned char* PixelArray;
 
+	unsigned char** PixelArray2D;
+
 public:
 	BMPManager(std::string fileLocation);
 	~BMPManager();
@@ -52,7 +54,11 @@ public:
 
 	System::Drawing::Bitmap^ createBitmap(BYTE** PixelArray);
 
-	unsigned char getPixelArray();
+	unsigned char* getPixelArray();
+	unsigned char** getPixelArray2D();
+
+	int getWidth();
+	int getHeight();
 
 private:
 

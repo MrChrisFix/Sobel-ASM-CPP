@@ -29,7 +29,7 @@ BMPManager::~BMPManager()
 }
 
 
-System::Drawing::Bitmap^ BMPManager::getBitmap()
+System::Drawing::Bitmap^ BMPManager::getBitmap() //Not used anymore
 {
 	System::Drawing::Bitmap^ greyImage = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
 
@@ -82,34 +82,57 @@ System::Drawing::Bitmap^ BMPManager::getBitmap2()
 
 
 
-
-
 System::Drawing::Bitmap^ BMPManager::createBitmap(BYTE** PixelArray)
 {
 	System::Drawing::Bitmap^ Image = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
 
-	size_t currentByte = 0;
+	System::Drawing::Rectangle rect = System::Drawing::Rectangle(0, 0, Image->Width, Image->Height);
 
-	for (int y = Image->Height - 1; y >= 0; y--)
+	System::Drawing::Imaging::BitmapData^ imageData = Image->LockBits(rect, System::Drawing::Imaging::ImageLockMode::WriteOnly, System::Drawing::Imaging::PixelFormat::Format24bppRgb);
+
+
+	int length = imageData->Stride * imageData->Height;
+
+	array<BYTE>^ bytes = gcnew array<BYTE>(length);
+
+	size_t currentByte = 0;
+	int addtionalPixels = Image->Width % 4;
+	for (int y = imageData->Height - 1; y >= 0; y--)
 	{
-		for (int x = 0; x < Image->Width; x++)
+		for (int x = 0; x < imageData->Stride; x++)
 		{
-			Image->SetPixel(x, y, System::Drawing::Color::FromArgb(
-				this->PixelArray[currentByte], this->PixelArray[currentByte], this->PixelArray[currentByte] //all rgb in gray are the same
-			));
-			currentByte ++;
-			if (currentByte > this->BMPInfoHeader.biSizeImage)
-				return Image;
+			bytes[currentByte] = this->PixelArray2D[x][y];
+			currentByte++;
 		}
+		//currentByte += addtionalPixels;
 	}
+
+	System::Runtime::InteropServices::Marshal::Copy(bytes, 0, imageData->Scan0, length);
+
+	Image->UnlockBits(imageData);
 
 	return Image;
 
 }
 
-unsigned char BMPManager::getPixelArray()
+unsigned char* BMPManager::getPixelArray()
 {
-	return *this->PixelArray;
+	return this->PixelArray;
+}
+
+unsigned char** BMPManager::getPixelArray2D()
+{
+	return this->PixelArray2D;
+}
+
+int BMPManager::getWidth()
+{
+	return this->BMPInfoHeader.biWidth;
+}
+
+int BMPManager::getHeight()
+{
+	return this->BMPInfoHeader.biHeight;
 }
 
 
@@ -143,16 +166,37 @@ void BMPManager::distributeByteFile()
 
 	this->extractPixelData();
 
-	if (!checkIfGray()) changeToGrayScale();
-
 }
 
 void BMPManager::extractPixelData()
 {
+	//1d array
+
 	this->PixelArray = new unsigned char[this->BMPInfoHeader.biSizeImage];
 
 	for(size_t i = 0; i< this->BMPInfoHeader.biSizeImage; i++)
 		this->PixelArray[i] = this->byteFile[this->fileHeader.Offset+i];
+
+
+	if (!checkIfGray()) changeToGrayScale();
+
+	//2d array
+	int additionalPixels = this->BMPInfoHeader.biWidth % 4;
+	int bytesInRow = this->BMPInfoHeader.biWidth * 3 + additionalPixels;
+
+	this->PixelArray2D = new unsigned char* [bytesInRow];
+	for (int i = 0; i < bytesInRow; i++)
+		this->PixelArray2D[i] = new unsigned char[this->BMPInfoHeader.biHeight];
+
+	for (int y = this->BMPInfoHeader.biHeight-1; y >=0 ; y--)
+		for (int x = 0; x < bytesInRow; x++)
+		{
+			this->PixelArray2D[x][y] = this->PixelArray[y * (bytesInRow) + x];	//PixelArray2D is now in order form left top corner to right ottom corner
+		}																		//where PixelArray is as always from left bottom corner to right top corner
+
+	//INFO:
+	//this->BMPInfoHeader.biSizeImage == (this->BMPInfoHeader.biWidth*3 + additionalPixels) * BMPInfoHeader.biHeight)
+
 }
 
 bool BMPManager::checkIfGray()
