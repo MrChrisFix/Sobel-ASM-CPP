@@ -51,12 +51,15 @@ public:
 	System::Drawing::Bitmap^ getBitmap(); //Only for debug
 
 	System::Drawing::Bitmap^ createBitmap(unsigned char** PixelArray);
+	System::Drawing::Bitmap^ createBitmapFrom2DArray();
 
 	unsigned char* getPixelArray();
 	unsigned char** getPixelArray2D();
 
 	int getWidth();
 	int getHeight();
+
+	void restorePixelArray2D();
 
 private:
 

@@ -132,7 +132,6 @@
     <ClCompile Include="BMPManager.cpp" />
     <ClCompile Include="Sobel_ASM.cpp" />
     <ClCompile Include="Sobel_CPP.cpp" />
-    <ClCompile Include="ThreadsFactory.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Listener.h" />
@@ -142,7 +141,6 @@
     <ClInclude Include="BMPManager.h" />
     <ClInclude Include="Sobel_ASM.h" />
     <ClInclude Include="Sobel_CPP.h" />
-    <ClInclude Include="ThreadsFactory.h" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="main.resx">

@@ -1,7 +1,9 @@
 #include "Listener.h"
 #include <msclr/marshal_cppstd.h>
+#include "Sobel_CPP.h"
+#include "Sobel_ASM.h"
 
-Listener::Listener()
+Listener::Listener() : Cpp(), Asm()
 {
 	this->originalBitmap = nullptr;
 	this->grayBitmap = nullptr;
@@ -33,18 +35,24 @@ System::Drawing::Bitmap^ Listener::reactOnFileSelected(System::String^ fileName)
 	return this->originalBitmap;
 }
 
-std::chrono::duration<double> Listener::reactOnStartButton(short id, short threadNumberId, System::Windows::Forms::PictureBox^ pictureBox)
+std::chrono::duration<double> Listener::reactOnStartButton(short id, short threadNumber, System::Windows::Forms::PictureBox^ pictureBox)
 {
 	auto start = std::chrono::steady_clock::now(); //TODO:Delete
-	if (id== 0) //Asembler
+	if (this->originalBitmap != nullptr)
 	{
-		pictureBox->Image = this->grayBitmap; //this->AsmChangedBitmap;
-	}
-	else if (id == 1) //C++
-	{
-		for (int i = 0; i < 1000000; i++)
-			i += 1;
-		pictureBox->Image = this->grayBitmap; //this->CppChangedBitmap;
+		if (id == 0) //Asembler
+		{
+			this->Asm.executeInASM(threadNumber, bmpManager);
+			pictureBox->Image = this->grayBitmap; //this->AsmChangedBitmap;
+		}
+		else if (id == 1) //C++
+		{
+			//auto Image = Sobel
+			this->Cpp.executeInCpp(threadNumber, bmpManager);
+			auto Image = this->bmpManager->createBitmapFrom2DArray();
+			pictureBox->Image = Image;
+			//pictureBox->Image = this->grayBitmap; //this->CppChangedBitmap;
+		}
 	}
 	auto end = std::chrono::steady_clock::now(); //TODO:Delete
 

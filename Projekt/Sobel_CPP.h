@@ -4,11 +4,9 @@
 #include <chrono>
 #include "BMPManager.h"
 
-class Sobel_CPP
+ref class Sobel_CPP
 {
 private:
-
-
 
 
 public:

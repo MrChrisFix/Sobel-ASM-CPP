@@ -4,16 +4,13 @@
 
 #define Expo extern "C" __declspec(dllexport)
 
-Expo void tangensMilion()
-{
-	double a = 0;
-	for (int i = 0; i < 1000000; i++)
-		a += i;
-	return;
-}
-
 Expo BYTE** Sobel(BYTE** PixelArray, int arraySize, int imageHeight, int imageWidth)
 {
+	//DEBUG:
+	return PixelArray;
+
+	//Most code below is garbage :)
+
 	int GxMatrix[9] = { 1,0,-1,2,0,-2,1,0,-2 };
 	int GyMatrix[9] = { 1,2,1,0,0,0,-1,-2,-1 };
 

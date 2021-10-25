@@ -1,6 +1,8 @@
 #pragma once
 #include <chrono>
 #include "BMPManager.h"
+#include "Sobel_CPP.h"
+#include "Sobel_ASM.h"
 
 using namespace System::Drawing;
 
@@ -14,6 +16,9 @@ private:
 	Bitmap^ AsmChangedBitmap;
 
 	BMPManager* bmpManager;
+	Sobel_CPP Cpp;
+	Sobel_ASM Asm;
+
 
 public:
 	Listener();
@@ -21,6 +26,6 @@ public:
 
 	Bitmap^ reactOnFileSelected(System::String^ fileName);
 
-	std::chrono::duration<double> reactOnStartButton(short id, short threadNumberId, System::Windows::Forms::PictureBox^ pictureBox);
+	std::chrono::duration<double> reactOnStartButton(short id, short threadNumber, System::Windows::Forms::PictureBox^ pictureBox);
 };
 

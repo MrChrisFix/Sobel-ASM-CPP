@@ -23,10 +23,6 @@ namespace ProjektJA {
 	/// </summary>
 	public ref class MyForm : public System::Windows::Forms::Form
 	{
-		//ASM
-		typedef int (*FunkcjaASM_t)(); //drugi nawias na argumenty
-		FunkcjaASM_t wykonajASM;
-
 		Listener^ listener;
 
 	public:
@@ -37,12 +33,10 @@ namespace ProjektJA {
 			//TODO: W tym miejscu dodaj kod konstruktora
 			//
 			this->comboBox1->SelectedIndex = 0;
-			this->comboBox2->SelectedIndex = 0;
 			
 			this->openFileDialog1->Title = "Wybierz obraz";
 			this->openFileDialog1->FileName = "";
 			this->openFileDialog1->Filter = "Bitmaps|*.bmp";
-			loadAsmDLL();
 
 			this->listener = gcnew Listener();
 		}
@@ -60,23 +54,6 @@ namespace ProjektJA {
 
 			delete this->listener;
 		}
-		void loadAsmDLL()
-		{
-			HINSTANCE asmDLL = LoadLibrary(L"AsemblerDLL.dll");
-
-			if (!asmDLL)
-			{
-				//nie udalo sie zaladwac biblioteki
-				this->label2->Text += "ERROR_ASM_LOAD";
-			}
-			else
-			{
-				this->wykonajASM = (FunkcjaASM_t)GetProcAddress(asmDLL, "FunkcjaASM");// w string jest nazwa funkcji
-				if (!wykonajASM)
-					this->label2->Text += "ERROR_ASM_WHERE";
-			}
-
-		}
 
 
 	private: System::Windows::Forms::PictureBox^ pictureBox1;
@@ -93,9 +70,10 @@ namespace ProjektJA {
 	private: System::Windows::Forms::Label^ label2;
 	private: System::Windows::Forms::Label^ label3;
 	private: System::Windows::Forms::Label^ label4;
-	private: System::Windows::Forms::ComboBox^ comboBox2;
 	private: System::Windows::Forms::Label^ label5;
 	private: System::Windows::Forms::Label^ label6;
+	private: System::Windows::Forms::TextBox^ textBox1;
+	private: System::Windows::Forms::Label^ label7;
 
 	protected:
 
@@ -126,9 +104,10 @@ namespace ProjektJA {
 			this->pictureBox2 = (gcnew System::Windows::Forms::PictureBox());
 			this->label3 = (gcnew System::Windows::Forms::Label());
 			this->label4 = (gcnew System::Windows::Forms::Label());
-			this->comboBox2 = (gcnew System::Windows::Forms::ComboBox());
 			this->label5 = (gcnew System::Windows::Forms::Label());
 			this->label6 = (gcnew System::Windows::Forms::Label());
+			this->textBox1 = (gcnew System::Windows::Forms::TextBox());
+			this->label7 = (gcnew System::Windows::Forms::Label());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBox1))->BeginInit();
 			this->menuStrip1->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBox2))->BeginInit();
@@ -250,15 +229,6 @@ namespace ProjektJA {
 			this->label4->TabIndex = 10;
 			this->label4->Text = L"Zdjêcie po przeróbce";
 			// 
-			// comboBox2
-			// 
-			this->comboBox2->FormattingEnabled = true;
-			this->comboBox2->Items->AddRange(gcnew cli::array< System::Object^  >(6) { L"1", L"2", L"4", L"8", L"16", L"32" });
-			this->comboBox2->Location = System::Drawing::Point(140, 507);
-			this->comboBox2->Name = L"comboBox2";
-			this->comboBox2->Size = System::Drawing::Size(56, 21);
-			this->comboBox2->TabIndex = 11;
-			// 
 			// label5
 			// 
 			this->label5->AutoSize = true;
@@ -271,20 +241,40 @@ namespace ProjektJA {
 			// label6
 			// 
 			this->label6->AutoSize = true;
-			this->label6->Location = System::Drawing::Point(150, 491);
+			this->label6->Location = System::Drawing::Point(144, 491);
 			this->label6->Name = L"label6";
 			this->label6->Size = System::Drawing::Size(35, 13);
 			this->label6->TabIndex = 13;
 			this->label6->Text = L"W¹tki";
+			// 
+			// textBox1
+			// 
+			this->textBox1->Location = System::Drawing::Point(140, 508);
+			this->textBox1->MaxLength = 2;
+			this->textBox1->Name = L"textBox1";
+			this->textBox1->Size = System::Drawing::Size(45, 20);
+			this->textBox1->TabIndex = 14;
+			this->textBox1->TabStop = false;
+			this->textBox1->Text = L"1";
+			this->textBox1->KeyPress += gcnew System::Windows::Forms::KeyPressEventHandler(this, &MyForm::textBox1_KeyPress);
+			// 
+			// label7
+			// 
+			this->label7->AutoSize = true;
+			this->label7->Location = System::Drawing::Point(610, 511);
+			this->label7->Name = L"label7";
+			this->label7->Size = System::Drawing::Size(0, 13);
+			this->label7->TabIndex = 15;
 			// 
 			// MyForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(1360, 570);
+			this->Controls->Add(this->label7);
+			this->Controls->Add(this->textBox1);
 			this->Controls->Add(this->label6);
 			this->Controls->Add(this->label5);
-			this->Controls->Add(this->comboBox2);
 			this->Controls->Add(this->label4);
 			this->Controls->Add(this->label3);
 			this->Controls->Add(this->pictureBox2);
@@ -310,8 +300,17 @@ namespace ProjektJA {
 
 	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) 
 	{
+		int numberOfThreads = 0;
+		if(!(this->textBox1->Text == "")) numberOfThreads = int::Parse(this->textBox1->Text);
 
-		auto elapsedSeconds = this->listener->reactOnStartButton(this->comboBox1->SelectedIndex, this->comboBox2->SelectedIndex, this->pictureBox2);
+		if (numberOfThreads > 64 || numberOfThreads < 1)
+		{
+			this->label7->Text = L"Z³a iloœæ w¹tków!";
+
+			return;
+		}
+		this->label7->Text = L"";
+		auto elapsedSeconds = this->listener->reactOnStartButton(this->comboBox1->SelectedIndex, numberOfThreads, this->pictureBox2);
 
 		if (elapsedSeconds.count() > 0.01)
 		{
@@ -324,14 +323,11 @@ namespace ProjektJA {
 	private: System::Void openFileDialog1_FileOk(System::Object^ sender, System::ComponentModel::CancelEventArgs^ e) 
 	{
 		auto image = this->listener->reactOnFileSelected(this->openFileDialog1->FileName);
+		this->pictureBox2->Image = nullptr;
 
 		if(image != nullptr)
 			pictureBox1->Image = image;
 
-
-		//Bitmap^ gray = klasa.getBitmap();
-
-		//if(gray!=nullptr) this->pictureBox2->Image = gray;
 
 		//Bitmap^ test = klasa.createBitmap(klasa.getPixelArray2D());
 
@@ -358,8 +354,14 @@ namespace ProjektJA {
 		//this->saveFileDialog1->ShowDialog(); //TODO
 	}
 
-	private: System::Void comboBox1_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e) 
+	private: System::Void comboBox1_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e)
 	{
+
+	}
+	
+	private: System::Void textBox1_KeyPress(System::Object^ sender, System::Windows::Forms::KeyPressEventArgs^ e) 
+	{
+		if (e->KeyChar > 57 || e->KeyChar < 48) e->Handled = true;
 	}
 };
 }

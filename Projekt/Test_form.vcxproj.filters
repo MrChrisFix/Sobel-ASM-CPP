@@ -3,9 +3,6 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="BMPManager.cpp" />
-    <ClCompile Include="ThreadsFactory.cpp">
-      <Filter>ThreadsFactory</Filter>
-    </ClCompile>
     <ClCompile Include="Sobel_ASM.cpp">
       <Filter>Classes for library managemant</Filter>
     </ClCompile>
@@ -17,9 +14,6 @@
   <ItemGroup>
     <ClInclude Include="main.h" />
     <ClInclude Include="BMPManager.h" />
-    <ClInclude Include="ThreadsFactory.h">
-      <Filter>ThreadsFactory</Filter>
-    </ClInclude>
     <ClInclude Include="Sobel_CPP.h">
       <Filter>Classes for library managemant</Filter>
     </ClInclude>
@@ -29,9 +23,6 @@
     <ClInclude Include="Listener.h" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="ThreadsFactory">
-      <UniqueIdentifier>{a12d995a-2984-4dc1-b69e-0a31370f2c98}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Classes for library managemant">
       <UniqueIdentifier>{e05cb6c1-acc2-47fb-8b2f-423fcdc5b30d}</UniqueIdentifier>
     </Filter>

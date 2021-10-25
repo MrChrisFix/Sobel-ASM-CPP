@@ -16,9 +16,7 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 	std::vector<std::thread> Threads;
 
 	for (int i = 0; i < numerOfThreads; i++)
-	{
 		Threads.push_back(std::thread());
-	}
 
 
 	auto start = std::chrono::steady_clock::now();
