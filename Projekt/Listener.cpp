@@ -31,6 +31,7 @@ System::Drawing::Bitmap^ Listener::reactOnFileSelected(System::String^ fileName)
 	this->bmpManager = new BMPManager(msclr::interop::marshal_as<std::string>(fileName));
 
 	this->grayBitmap = this->bmpManager->getBitmap();
+	this->grayBitmap = this->bmpManager->createBitmapFromGray();
 
 	return this->originalBitmap;
 }

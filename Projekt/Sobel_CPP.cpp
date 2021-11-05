@@ -23,7 +23,7 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 
 	for (int i = 0; i < numerOfThreads; i++)
 	{
-		Threads[i] = std::thread(Sobel, bitmap->getPixelArray2D(), 1, bitmap->getHeight(), bitmap->getWidth());
+		//Threads[i] = std::thread(Sobel, bitmap->getPixelArray2D(), bitmap->getHeight(), bitmap->getWidth());
 	}
 
 	//Sobel()

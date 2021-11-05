@@ -44,6 +44,8 @@ private:
 
 	unsigned char** PixelArray2D;
 
+	unsigned char* grayOneChannelArray;
+
 public:
 	BMPManager(std::string fileLocation);
 	~BMPManager();
@@ -52,6 +54,9 @@ public:
 
 	System::Drawing::Bitmap^ createBitmap(unsigned char** PixelArray);
 	System::Drawing::Bitmap^ createBitmapFrom2DArray();
+	System::Drawing::Bitmap^ createBitmapFromGray();
+
+
 
 	unsigned char* getPixelArray();
 	unsigned char** getPixelArray2D();

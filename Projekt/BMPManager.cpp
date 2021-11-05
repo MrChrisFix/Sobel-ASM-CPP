@@ -136,6 +136,53 @@ System::Drawing::Bitmap^ BMPManager::createBitmapFrom2DArray()
 	return Image;
 }
 
+System::Drawing::Bitmap^ BMPManager::createBitmapFromGray()
+{
+	System::Drawing::Bitmap^ Image = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
+
+	System::Drawing::Rectangle rect = System::Drawing::Rectangle(0, 0, Image->Width, Image->Height);
+
+	System::Drawing::Imaging::BitmapData^ imageData = Image->LockBits(rect, System::Drawing::Imaging::ImageLockMode::WriteOnly, System::Drawing::Imaging::PixelFormat::Format24bppRgb);
+
+	int length = imageData->Stride * imageData->Height;
+
+	array<BYTE>^ bytes = gcnew array<BYTE>(length);
+
+	auto temp = new unsigned char[this->BMPInfoHeader.biSizeImage];
+	
+
+	int currentByte = 0;
+	int addtionalPixels = Image->Width % 4;
+	for (int y = BMPInfoHeader.biHeight - 1; y > -0; y--)
+	{
+		for (int x = 0; x < BMPInfoHeader.biWidth; x++)
+		{
+			temp[currentByte] = temp[currentByte+1] = temp[currentByte+2] = this->grayOneChannelArray[y * BMPInfoHeader.biHeight + x];
+			currentByte += 3;
+		}
+		currentByte += addtionalPixels;
+	}
+
+	currentByte = 0;
+
+	for (int y = imageData->Height - 1; y >= 0; y--)
+	{
+		for (int x = 0; x < imageData->Stride; x++)
+		{
+			bytes[currentByte] = temp[currentByte];
+			currentByte++;
+		}
+		//currentByte += addtionalPixels;
+	}
+
+
+	System::Runtime::InteropServices::Marshal::Copy(bytes, 0, imageData->Scan0, length);
+
+	Image->UnlockBits(imageData);
+
+	return Image;
+}
+
 unsigned char* BMPManager::getPixelArray()
 {
 	return this->PixelArray;
@@ -218,6 +265,7 @@ void BMPManager::extractPixelData()
 	for(size_t i = 0; i< this->BMPInfoHeader.biSizeImage; i++)
 		this->PixelArray[i] = this->byteFile[this->fileHeader.Offset+i];
 
+	this->grayOneChannelArray = new unsigned char[this->BMPInfoHeader.biHeight * this->BMPInfoHeader.biWidth];
 
 	if (!checkIfGray()) changeToGrayScale();
 
@@ -249,7 +297,8 @@ void BMPManager::changeToGrayScale()
 	int addtionalPixels = this->BMPInfoHeader.biWidth % 4;
 
 	size_t currentByte = 0;
-	for (int y = this->BMPInfoHeader.biHeight - 1; y >= 0; y--)
+	//for (int y = this->BMPInfoHeader.biHeight - 1; y >= 0; y--)
+	for (int y = 0 ; y < this->BMPInfoHeader.biHeight; y++)
 	{
 		for (int x = 0; x < this->BMPInfoHeader.biWidth; x++)
 		{
@@ -260,6 +309,8 @@ void BMPManager::changeToGrayScale()
 			float red = this->PixelArray[currentByte] / 255.0f;
 
 			float waged = red * 0.2126f + green * 0.7152f + blue * 0.0722f; //Good waged grayscale transformation
+
+			this->grayOneChannelArray[y * this->BMPInfoHeader.biHeight + x] = waged * 255.0f;
 
 			for (int i = 0; i < 3; i++)
 				this->PixelArray[currentByte + i] = waged * 255.0f;
