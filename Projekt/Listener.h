@@ -12,10 +12,14 @@ private:
 
 	Bitmap^ originalBitmap;
 	Bitmap^ grayBitmap;
+	Bitmap^ CppBitmap;
+	Bitmap^ AsmBitmap;
 
 	BMPManager* bmpManager;
 	Sobel_CPP Cpp;
 	Sobel_ASM Asm;
+
+	int currentImage;
 
 
 public:
@@ -23,6 +27,8 @@ public:
 	~Listener();
 
 	Bitmap^ reactOnFileSelected(System::String^ fileName);
+	Bitmap^ getChangedBitmap();
+	void saveBitmap(System::String^ fileName);
 
 	std::chrono::duration<double> reactOnStartButton(short id, short threadNumber, System::Windows::Forms::PictureBox^ pictureBox);
 };

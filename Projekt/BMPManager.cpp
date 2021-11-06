@@ -152,7 +152,7 @@ System::Drawing::Bitmap^ BMPManager::createBitmapFromGray()
 
 System::Drawing::Bitmap^ BMPManager::createBitmapFromGray(unsigned char* Array)
 {
-	System::Drawing::Bitmap^ Image = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
+	System::Drawing::Bitmap^ Image = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight, System::Drawing::Imaging::PixelFormat::Format24bppRgb);
 
 	System::Drawing::Rectangle rect = System::Drawing::Rectangle(0, 0, Image->Width, Image->Height);
 

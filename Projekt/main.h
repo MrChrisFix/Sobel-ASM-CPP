@@ -327,21 +327,23 @@ namespace ProjektJA {
 
 		if(image != nullptr)
 			pictureBox1->Image = image;
-
-
-		//Bitmap^ test = klasa.createBitmap(klasa.getPixelArray2D());
-
-		//if (test != nullptr) this->pictureBox2->Image = test;
-		
-		//Bitmap^ sobelCpp = klasa.createBitmap(Sobel(klasa.getPixelArray2D(), 1, klasa.getHeight(), klasa.getHeight()));
-
-		//if (sobelCpp != nullptr) this->pictureBox2->Image = sobelCpp;
 	}
 
 
 	private: System::Void saveFileDialog1_FileOk(System::Object^ sender, System::ComponentModel::CancelEventArgs^ e)
 	{
+		/* Not ready yet
 
+		if (saveFileDialog1->FileName != "")
+		{
+			auto bitmap = this->listener->getChangedBitmap();
+			if(bitmap != nullptr)
+				listener->saveBitmap(saveFileDialog1->FileName);
+
+				
+			//bitmap->Save(saveFileDialog1->FileName, System::Drawing::Imaging::ImageFormat::Bmp);
+		}
+		*/
 	}
 
 	private: System::Void wczytajToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) 
@@ -351,12 +353,11 @@ namespace ProjektJA {
 
 	private: System::Void zapiszToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) 
 	{
-		//this->saveFileDialog1->ShowDialog(); //TODO
+		this->saveFileDialog1->ShowDialog();
 	}
 
 	private: System::Void comboBox1_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e)
 	{
-
 	}
 	
 	private: System::Void textBox1_KeyPress(System::Object^ sender, System::Windows::Forms::KeyPressEventArgs^ e) 
