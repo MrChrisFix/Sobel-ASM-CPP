@@ -12,8 +12,6 @@ private:
 
 	Bitmap^ originalBitmap;
 	Bitmap^ grayBitmap;
-	Bitmap^ CppChangedBitmap;
-	Bitmap^ AsmChangedBitmap;
 
 	BMPManager* bmpManager;
 	Sobel_CPP Cpp;

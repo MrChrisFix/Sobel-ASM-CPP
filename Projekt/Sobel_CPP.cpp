@@ -11,7 +11,7 @@ Sobel_CPP::~Sobel_CPP()
 {
 }
 
-std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPManager* bitmap)
+std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPManager* bitmap, BYTE*& ptr)
 {
 	std::vector<std::thread> Threads;
 
@@ -26,15 +26,16 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 	//	Threads[i] = std::thread(Sobel, bitmap->getPixelArray2D(), bitmap->getHeight(), bitmap->getWidth());
 	//}
 
-	unsigned char* result = Sobel(bitmap->getGrayArray(), bitmap->getHeight(), bitmap->getWidth(), bitmap->getHeight() * bitmap->getWidth(), 0);
-	
+	ptr = Sobel(bitmap->getGrayArray(), bitmap->getHeight(), bitmap->getWidth(), bitmap->getHeight() * bitmap->getWidth(), 0);
 
-	bitmap->setGrayArray(result);
-	//Sobel()
+
 	for (int i = 0; i < numerOfThreads; i++);
 		//Threads[i].join();
 
 	auto end = std::chrono::steady_clock::now();
+
+
+
 	std::chrono::duration<double> elapsed_seconds = end - start;
 
 	return elapsed_seconds;

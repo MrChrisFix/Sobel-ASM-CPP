@@ -53,8 +53,8 @@ public:
 	System::Drawing::Bitmap^ getBitmap(); //Only for debug
 
 	System::Drawing::Bitmap^ createBitmap(unsigned char** PixelArray);
-	System::Drawing::Bitmap^ createBitmapFrom2DArray();
 	System::Drawing::Bitmap^ createBitmapFromGray();
+	System::Drawing::Bitmap^ createBitmapFromGray(unsigned char* Array);
 
 
 

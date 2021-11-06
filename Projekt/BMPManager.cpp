@@ -104,38 +104,6 @@ System::Drawing::Bitmap^ BMPManager::createBitmap(unsigned char** PixelArray)
 
 }
 
-System::Drawing::Bitmap^ BMPManager::createBitmapFrom2DArray()
-{
-	System::Drawing::Bitmap^ Image = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
-
-	System::Drawing::Rectangle rect = System::Drawing::Rectangle(0, 0, Image->Width, Image->Height);
-
-	System::Drawing::Imaging::BitmapData^ imageData = Image->LockBits(rect, System::Drawing::Imaging::ImageLockMode::WriteOnly, System::Drawing::Imaging::PixelFormat::Format24bppRgb);
-
-
-	int length = imageData->Stride * imageData->Height;
-
-	array<BYTE>^ bytes = gcnew array<BYTE>(length);
-
-	int currentByte = 0;
-	int addtionalPixels = Image->Width % 4;
-	for (int y = imageData->Height - 1; y >= 0; y--)
-	{
-		for (int x = 0; x < imageData->Stride; x++)
-		{
-			bytes[currentByte] = this->PixelArray2D[x][y];
-			currentByte++;
-		}
-		//currentByte += addtionalPixels;
-	}
-
-	System::Runtime::InteropServices::Marshal::Copy(bytes, 0, imageData->Scan0, length);
-
-	Image->UnlockBits(imageData);
-
-	return Image;
-}
-
 System::Drawing::Bitmap^ BMPManager::createBitmapFromGray()
 {
 	System::Drawing::Bitmap^ Image = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
@@ -159,6 +127,52 @@ System::Drawing::Bitmap^ BMPManager::createBitmapFromGray()
 		for (int x = 0; x < BMPInfoHeader.biWidth; x++)
 		{
 			temp[currentByte] = temp[currentByte+1] = temp[currentByte+2] = this->grayOneChannelArray[y * BMPInfoHeader.biWidth + x];
+			currentByte += 3;
+		}
+		currentByte += addtionalPixels;
+	}
+
+	currentByte = 0;
+
+	for (int y = imageData->Height - 1; y >= 0; y--)
+	{
+		for (int x = 0; x < imageData->Stride; x++)
+		{
+			bytes[currentByte] = temp[currentByte];
+			currentByte++;
+		}
+	}
+
+	System::Runtime::InteropServices::Marshal::Copy(bytes, 0, imageData->Scan0, length);
+
+	Image->UnlockBits(imageData);
+
+	return Image;
+}
+
+System::Drawing::Bitmap^ BMPManager::createBitmapFromGray(unsigned char* Array)
+{
+	System::Drawing::Bitmap^ Image = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
+
+	System::Drawing::Rectangle rect = System::Drawing::Rectangle(0, 0, Image->Width, Image->Height);
+
+	System::Drawing::Imaging::BitmapData^ imageData = Image->LockBits(rect, System::Drawing::Imaging::ImageLockMode::WriteOnly, System::Drawing::Imaging::PixelFormat::Format24bppRgb);
+
+	int length = imageData->Stride * imageData->Height;
+
+	array<BYTE>^ bytes = gcnew array<BYTE>(length);
+
+	auto temp = new unsigned char[this->BMPInfoHeader.biSizeImage];
+
+
+	//Transfering single-channel array to tripple-channel array
+	int currentByte = 0;
+	int addtionalPixels = Image->Width % 4;
+	for (int y = BMPInfoHeader.biHeight - 1; y > -0; y--)
+	{
+		for (int x = 0; x < BMPInfoHeader.biWidth; x++)
+		{
+			temp[currentByte] = temp[currentByte + 1] = temp[currentByte + 2] = Array[y * BMPInfoHeader.biWidth + x];
 			currentByte += 3;
 		}
 		currentByte += addtionalPixels;
