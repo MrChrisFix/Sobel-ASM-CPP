@@ -7,4 +7,9 @@
 #define CPPDLL_API __declspec(dllimport)
 #endif
 
-extern "C" CPPDLL_API BYTE** Sobel(BYTE** PixelArray, int arraySize, int imageHeight, int imageWidth);
+
+int* Vertical(BYTE* Array, int imageHeight, int imageWidth, int bytesToCalculate, int start);
+
+int* Horizontal(BYTE* Array, int imageHeight, int imageWidth, int bytesToCalculate, int start);
+
+extern "C" CPPDLL_API BYTE* Sobel(BYTE* PixelArray, int imageHeight, int imageWidth, int bytesToCalculate, int start);

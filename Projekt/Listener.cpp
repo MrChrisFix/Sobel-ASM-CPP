@@ -30,7 +30,7 @@ System::Drawing::Bitmap^ Listener::reactOnFileSelected(System::String^ fileName)
 	if (this->bmpManager) delete bmpManager;
 	this->bmpManager = new BMPManager(msclr::interop::marshal_as<std::string>(fileName));
 
-	this->grayBitmap = this->bmpManager->getBitmap();
+	//this->grayBitmap = this->bmpManager->getBitmap(); TODO: delete
 	this->grayBitmap = this->bmpManager->createBitmapFromGray();
 
 	return this->originalBitmap;
@@ -50,7 +50,7 @@ std::chrono::duration<double> Listener::reactOnStartButton(short id, short threa
 		{
 			//auto Image = Sobel
 			this->Cpp.executeInCpp(threadNumber, bmpManager);
-			auto Image = this->bmpManager->createBitmapFrom2DArray();
+			auto Image = this->bmpManager->createBitmapFromGray();
 			pictureBox->Image = Image;
 			//pictureBox->Image = this->grayBitmap; //this->CppChangedBitmap;
 		}

@@ -61,6 +61,9 @@ public:
 	unsigned char* getPixelArray();
 	unsigned char** getPixelArray2D();
 
+	unsigned char* getGrayArray();
+	void setGrayArray(unsigned char* arr);
+
 	int getWidth();
 	int getHeight();
 
