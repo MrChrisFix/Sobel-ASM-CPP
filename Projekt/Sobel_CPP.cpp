@@ -11,6 +11,11 @@ Sobel_CPP::~Sobel_CPP()
 {
 }
 
+void fun()
+{
+	std::cout << "hi!";
+}
+
 std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPManager* bitmap, BYTE*& ptr)
 {
 	//Slicing the array into parts for multithreading
@@ -29,23 +34,17 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 	}
 	
 	std::vector<std::thread> Threads;
-	std::vector<BYTE*> calculatedArrays;
 
-
-	for (int i = 0; i < numerOfThreads; i++)
-		calculatedArrays.push_back(nullptr);
-
+	int* calcArray = new int[arraySize];
 
 	int arrayStartOffset = 0;
 	auto start = std::chrono::steady_clock::now();
 
 	for (int i = 0; i < numerOfThreads; i++)
 	{
-		Threads.push_back(std::thread(Sobel, bitmap->getGrayArray(), bitmap->getHeight(), bitmap->getWidth(), length[i], arrayStartOffset, std::ref(calculatedArrays[i])));
+		Threads.push_back(std::thread(Sobel, bitmap->getGrayArray(), bitmap->getHeight(), bitmap->getWidth(), length[i], arrayStartOffset, calcArray));
 		arrayStartOffset += length[i];
 	}
-
-	//ptr = Sobel(bitmap->getGrayArray(), bitmap->getHeight(), bitmap->getWidth(), arraySize, 0, std::ref(calculatedArrays[0])); //Temporary
 
 
 	for (int i = 0; i < numerOfThreads; i++)
@@ -56,23 +55,35 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 				break;
 			}
 
-	auto end = std::chrono::steady_clock::now();
+	int minimum, maximum;
+	minimum = maximum = calcArray[0];
+	for (int i = 0; i < arraySize; i++)
+	{
+		if (calcArray[i] < minimum) minimum = calcArray[i];
+		if (calcArray[i] > maximum) maximum = calcArray[i];
+	}
 
 
-	//adding all arrays together into one fianl array
-	BYTE* completeResult = new BYTE[arraySize];
-	int currentByte = 0;
+	BYTE*normalized = new BYTE[arraySize];
+	arrayStartOffset = 0;
 	for (int i = 0; i < numerOfThreads; i++)
 	{
-		for (int j = 0; j < length[i]; j++)
-		{
-			completeResult[currentByte] = calculatedArrays[i][currentByte];
-			currentByte++;
-		}
+		Threads[i] = std::thread(Normalize, calcArray, arraySize, minimum, maximum, length[i], arrayStartOffset, std::ref(normalized));
+		arrayStartOffset += length[i];
 	}
-	ptr = completeResult;
+
+	for (int i = 0; i < numerOfThreads; i++)
+		if (Threads[i].joinable())
+		{
+			Threads[i].join();
+		}
+
+	auto end = std::chrono::steady_clock::now();
+
+	ptr = normalized;
 
 	std::chrono::duration<double> elapsed_seconds = end - start;
 
 	return elapsed_seconds;
 }
+
