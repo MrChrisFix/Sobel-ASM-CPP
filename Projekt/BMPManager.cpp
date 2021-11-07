@@ -339,7 +339,6 @@ void BMPManager::changeToGrayScale()
 	{
 		for (int x = 0; x < this->BMPInfoHeader.biWidth; x++)
 		{
-			//unsigned char sum = this->PixelArray[currentByte] + this->PixelArray[currentByte + 1] + this->PixelArray[currentByte + 2];
 
 			float blue = this->PixelArray[currentByte + 2] / 255.0f;
 			float green = this->PixelArray[currentByte + 1] / 255.0f;

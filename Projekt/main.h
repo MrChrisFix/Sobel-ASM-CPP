@@ -322,6 +322,9 @@ namespace ProjektJA {
 
 	private: System::Void openFileDialog1_FileOk(System::Object^ sender, System::ComponentModel::CancelEventArgs^ e) 
 	{
+		auto czas = L"" + "0 ms";
+		this->label2->Text = czas;
+
 		auto image = this->listener->reactOnFileSelected(this->openFileDialog1->FileName);
 		this->pictureBox2->Image = nullptr;
 
@@ -341,7 +344,7 @@ namespace ProjektJA {
 				listener->saveBitmap(saveFileDialog1->FileName);
 
 				
-			//bitmap->Save(saveFileDialog1->FileName, System::Drawing::Imaging::ImageFormat::Bmp);
+			//bitmap->Save(saveFileDialog1->FileName, System::Drawing::Imaging::ImageFormat::Bmp); //Not working properly
 		}
 		*/
 	}

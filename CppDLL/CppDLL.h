@@ -12,4 +12,4 @@ int* Vertical(BYTE* Array, int imageHeight, int imageWidth, int bytesToCalculate
 
 int* Horizontal(BYTE* Array, int imageHeight, int imageWidth, int bytesToCalculate, int start);
 
-extern "C" CPPDLL_API BYTE* Sobel(BYTE* PixelArray, int imageHeight, int imageWidth, int bytesToCalculate, int start);
+extern "C" CPPDLL_API BYTE* Sobel(BYTE* PixelArray, int imageHeight, int imageWidth, int bytesToCalculate, int start, BYTE*& calculatedArray);

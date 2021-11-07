@@ -15,6 +15,5 @@ public:
 
 	std::chrono::duration<double> executeInCpp(int numerOfThreads, BMPManager* bitmap, BYTE*& ptr);
 
-
 };
 

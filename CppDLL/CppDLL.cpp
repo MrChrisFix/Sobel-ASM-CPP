@@ -84,7 +84,7 @@ int* Horizontal(BYTE* Array, int imageHeight, int imageWidth, int bytesToCalcula
 	return GY;
 }
 
-Expo BYTE* Sobel(BYTE* grayArray, int imageHeight, int imageWidth, int bytesToCalculate, int start)
+Expo BYTE* Sobel(BYTE* grayArray, int imageHeight, int imageWidth, int bytesToCalculate, int start, BYTE*& calculatedArray)
 {
 	int arraySize = imageHeight * imageWidth;
 
@@ -122,6 +122,8 @@ Expo BYTE* Sobel(BYTE* grayArray, int imageHeight, int imageWidth, int bytesToCa
 	}
 
 	delete[] SobelMagnitude;
+
+	calculatedArray = result;
 
 	return result;
 }
