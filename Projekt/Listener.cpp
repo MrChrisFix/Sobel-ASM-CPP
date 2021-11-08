@@ -69,7 +69,7 @@ std::chrono::duration<double> Listener::reactOnStartButton(short id, short threa
 			this->CppBitmap = this->bmpManager->createBitmapFromGray(arrayPtr);
 			pictureBox->Image = this->CppBitmap;
 			
-			delete[] arrayPtr;
+			if(arrayPtr!=nullptr) delete[] arrayPtr;
 		}
 	}
 

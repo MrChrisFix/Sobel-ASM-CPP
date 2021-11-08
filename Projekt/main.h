@@ -51,8 +51,6 @@ namespace ProjektJA {
 			{
 				delete components;
 			}
-
-			delete this->listener;
 		}
 
 

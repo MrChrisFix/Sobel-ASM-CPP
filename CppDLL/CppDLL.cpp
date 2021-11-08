@@ -107,31 +107,12 @@ Expo BYTE* Sobel(BYTE* grayArray, int imageHeight, int imageWidth, int bytesToCa
 		calculatedArray[i] = SobelMagnitude[i];
 	}
 
-	
-
-	////Normalization
-	//int minimum, maximum;
-	//minimum = maximum = SobelMagnitude[0];
-	//for (int i = 0; i < arraySize; i++)
-	//{
-	//	if (SobelMagnitude[i] < minimum) minimum = SobelMagnitude[i];
-	//	if (SobelMagnitude[i] > maximum) maximum = SobelMagnitude[i];
-	//}
-	//int difference = maximum - minimum;
-	//if (difference == 0) difference = 1; //preventing division by 0
-	//BYTE* result = new BYTE[arraySize];
-	//for (int i = 0; i < arraySize; i++)
-	//{
-	//	result[i] = (SobelMagnitude[i] - minimum) / (difference * 1.0) * 255;
-	//}
-	//delete[] SobelMagnitude;
-	//calculatedArray = result;
-
-	
+	delete[] SobelMagnitude;
+		
 	return nullptr;
 }
 
-Expo void Normalize(int* source, int arraySize, int minimum, int maximum, int bytesToCalculate, int start, BYTE*& calculatedArray)
+Expo void Normalize(int* source, int minimum, int maximum, int bytesToCalculate, int start, BYTE*& calculatedArray)
 {
 	int difference = maximum - minimum;
 

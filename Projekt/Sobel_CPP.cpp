@@ -11,11 +11,6 @@ Sobel_CPP::~Sobel_CPP()
 {
 }
 
-void fun()
-{
-	std::cout << "hi!";
-}
-
 std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPManager* bitmap, BYTE*& ptr)
 {
 	//Slicing the array into parts for multithreading
@@ -69,7 +64,7 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 	arrayStartOffset = 0;
 	for (int i = 0; i < numerOfThreads; i++)
 	{
-		Threads[i] = std::thread(Normalize, calcArray, arraySize, minimum, maximum, length[i], arrayStartOffset, std::ref(normalized));
+		Threads[i] = std::thread(Normalize, calcArray, minimum, maximum, length[i], arrayStartOffset, std::ref(normalized));
 		arrayStartOffset += length[i];
 	}
 
@@ -84,6 +79,10 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 	ptr = normalized;
 
 	std::chrono::duration<double> elapsed_seconds = end - start;
+
+	if(length != nullptr) delete[] length;
+	if (calcArray != nullptr) delete[] calcArray;
+	Threads.clear();
 
 	return elapsed_seconds;
 }
