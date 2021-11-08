@@ -33,21 +33,23 @@ std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPMan
 {
 	std::vector<std::thread> Threads;
 
-	for (int i = 0; i < numerOfThreads; i++)
-		Threads.push_back(std::thread());
+	/*for (int i = 0; i < numerOfThreads; i++)
+		Threads.push_back(std::thread());*/
 
 
 	auto start = std::chrono::steady_clock::now();
 	if (loaded_library)
 	{
-		for (int i = 0; i < numerOfThreads; i++)
-		{
-			Threads[i] = std::thread(*wykonajASM);
-		}
+		//for (int i = 0; i < numerOfThreads; i++)
+		//{
+		//	Threads[i] = std::thread(*wykonajASM);
+		//}
 
-		//Sobel()
-		for (int i = 0; i < numerOfThreads; i++)
-			Threads[i].join();
+		////Sobel()
+		//for (int i = 0; i < numerOfThreads; i++)
+		//	Threads[i].join();
+
+		wykonajASM(1,2,3,4,5,6);
 	}
 
 	auto end = std::chrono::steady_clock::now();

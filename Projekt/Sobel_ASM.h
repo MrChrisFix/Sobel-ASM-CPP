@@ -2,7 +2,7 @@
 #include <chrono>
 #include "BMPManager.h"
 
-typedef int (*FunkcjaASM_t)(); //drugi nawias na argumenty
+typedef int (*FunkcjaASM_t)(char, int, int ,int, int, int); //drugi nawias na argumenty
 
 
 ref class Sobel_ASM

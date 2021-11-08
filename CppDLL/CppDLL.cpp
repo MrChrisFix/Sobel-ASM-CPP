@@ -117,19 +117,14 @@ Expo BYTE* Sobel(BYTE* grayArray, int imageHeight, int imageWidth, int bytesToCa
 	//	if (SobelMagnitude[i] < minimum) minimum = SobelMagnitude[i];
 	//	if (SobelMagnitude[i] > maximum) maximum = SobelMagnitude[i];
 	//}
-
 	//int difference = maximum - minimum;
-
 	//if (difference == 0) difference = 1; //preventing division by 0
-
 	//BYTE* result = new BYTE[arraySize];
 	//for (int i = 0; i < arraySize; i++)
 	//{
 	//	result[i] = (SobelMagnitude[i] - minimum) / (difference * 1.0) * 255;
 	//}
-
 	//delete[] SobelMagnitude;
-
 	//calculatedArray = result;
 
 	

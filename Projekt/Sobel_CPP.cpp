@@ -40,6 +40,7 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 	int arrayStartOffset = 0;
 	auto start = std::chrono::steady_clock::now();
 
+	//Fisrt use of threads: creating the number array
 	for (int i = 0; i < numerOfThreads; i++)
 	{
 		Threads.push_back(std::thread(Sobel, bitmap->getGrayArray(), bitmap->getHeight(), bitmap->getWidth(), length[i], arrayStartOffset, calcArray));
@@ -63,7 +64,7 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 		if (calcArray[i] > maximum) maximum = calcArray[i];
 	}
 
-
+	//Second use of threads: Normalizing the array to [0-255]
 	BYTE*normalized = new BYTE[arraySize];
 	arrayStartOffset = 0;
 	for (int i = 0; i < numerOfThreads; i++)
