@@ -31,5 +31,9 @@ public:
 	void saveBitmap(System::String^ fileName);
 
 	std::chrono::duration<double> reactOnStartButton(short id, short threadNumber, System::Windows::Forms::PictureBox^ pictureBox);
+
+private:
+
+	void deleteAllBitmaps();
 };
 

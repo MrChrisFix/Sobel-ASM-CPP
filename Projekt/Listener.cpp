@@ -15,20 +15,19 @@ Listener::Listener() : Cpp(), Asm()
 
 Listener::~Listener()
 {
-	if (this->originalBitmap) delete this->originalBitmap;
-	if (this->grayBitmap) delete this->grayBitmap;
-	if (this->CppBitmap) delete this->CppBitmap;
-
-	if (this->bmpManager) delete bmpManager;
+	this->deleteAllBitmaps();
 }
 
 System::Drawing::Bitmap^ Listener::reactOnFileSelected(System::String^ fileName)
 {
+	this->deleteAllBitmaps();
+
 	this->originalBitmap = gcnew Bitmap(fileName);
 
 	if (this->bmpManager) delete bmpManager;
 	this->bmpManager = new BMPManager(msclr::interop::marshal_as<std::string>(fileName));
 
+	if (this->grayBitmap != nullptr) delete this->grayBitmap;
 	this->grayBitmap = this->bmpManager->createBitmapFromGray();
 
 	return this->originalBitmap;
@@ -78,4 +77,19 @@ std::chrono::duration<double> Listener::reactOnStartButton(short id, short threa
 
 	return elapsed_seconds;
 
+}
+
+void Listener::deleteAllBitmaps()
+{
+	if (this->originalBitmap) delete this->originalBitmap;
+	if (this->grayBitmap) delete this->grayBitmap;
+	if (this->CppBitmap) delete this->CppBitmap;
+
+	if (this->bmpManager) delete bmpManager;
+
+	this->originalBitmap = nullptr;
+	this->grayBitmap = nullptr;
+	this->CppBitmap = nullptr;
+
+	this->bmpManager = nullptr;
 }

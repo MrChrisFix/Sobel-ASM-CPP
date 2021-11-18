@@ -323,8 +323,14 @@ namespace ProjektJA {
 		auto czas = L"" + "0 ms";
 		this->label2->Text = czas;
 
-		auto image = this->listener->reactOnFileSelected(this->openFileDialog1->FileName);
+		if (this->pictureBox1->Image != nullptr) delete this->pictureBox1->Image;
+		this->pictureBox1->Image = nullptr;
+
+		if (this->pictureBox2->Image != nullptr) delete this->pictureBox2->Image;
 		this->pictureBox2->Image = nullptr;
+
+
+		auto image = this->listener->reactOnFileSelected(this->openFileDialog1->FileName);
 
 		if(image != nullptr)
 			pictureBox1->Image = image;

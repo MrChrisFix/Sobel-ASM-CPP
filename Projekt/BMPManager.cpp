@@ -24,8 +24,8 @@ BMPManager::~BMPManager()
 {
 	delete[] this->byteFile;
 	delete[] this->PixelArray;
+	delete[] this->grayOneChannelArray;
 
-	//TODO: delete PixelArray2D
 
 	if (this->File.is_open()) this->File.close();
 }
@@ -42,13 +42,6 @@ System::Drawing::Bitmap^ BMPManager::getBitmap() //Only for debug
 	int length = imageData->Stride * imageData->Height;
 
 	array<BYTE>^ bytes = gcnew array<BYTE>(length);
-
-	/*int row = 4, column = 0;;
-	for (int i = 0; i < length; i++, column++)
-	{
-		if (i != 0 && i % imageData->Width == 0) { row--, column = 0; };
-		bytes[i] = this->PixelArray[row*(imageData->Width)+column];
-	}*/
 
 	int currentByte = 0;
 	int addtionalPixels = grayImage->Width % 4;
@@ -67,41 +60,6 @@ System::Drawing::Bitmap^ BMPManager::getBitmap() //Only for debug
 	grayImage->UnlockBits(imageData);
 
 	return grayImage;
-}
-
-
-
-System::Drawing::Bitmap^ BMPManager::createBitmap(unsigned char** PixelArray)
-{
-	System::Drawing::Bitmap^ Image = gcnew System::Drawing::Bitmap(this->BMPInfoHeader.biWidth, this->BMPInfoHeader.biHeight);
-
-	System::Drawing::Rectangle rect = System::Drawing::Rectangle(0, 0, Image->Width, Image->Height);
-
-	System::Drawing::Imaging::BitmapData^ imageData = Image->LockBits(rect, System::Drawing::Imaging::ImageLockMode::WriteOnly, System::Drawing::Imaging::PixelFormat::Format24bppRgb);
-
-
-	int length = imageData->Stride * imageData->Height;
-
-	array<BYTE>^ bytes = gcnew array<BYTE>(length);
-
-	int currentByte = 0;
-	int addtionalPixels = Image->Width % 4;
-	for (int y = imageData->Height - 1; y >= 0; y--)
-	{
-		for (int x = 0; x < imageData->Stride; x++)
-		{
-			bytes[currentByte] = PixelArray[x][y];
-			currentByte++;
-		}
-		//currentByte += addtionalPixels;
-	}
-
-	System::Runtime::InteropServices::Marshal::Copy(bytes, 0, imageData->Scan0, length);
-
-	Image->UnlockBits(imageData);
-
-	return Image;
-
 }
 
 System::Drawing::Bitmap^ BMPManager::createBitmapFromGray()
@@ -142,6 +100,8 @@ System::Drawing::Bitmap^ BMPManager::createBitmapFromGray()
 			currentByte++;
 		}
 	}
+
+	delete[] temp;
 
 	System::Runtime::InteropServices::Marshal::Copy(bytes, 0, imageData->Scan0, length);
 
@@ -189,6 +149,8 @@ System::Drawing::Bitmap^ BMPManager::createBitmapFromGray(unsigned char* Array)
 		}
 	}
 
+	delete[] temp;
+
 	System::Runtime::InteropServices::Marshal::Copy(bytes, 0, imageData->Scan0, length);
 
 	Image->UnlockBits(imageData);
@@ -199,11 +161,6 @@ System::Drawing::Bitmap^ BMPManager::createBitmapFromGray(unsigned char* Array)
 unsigned char* BMPManager::getPixelArray()
 {
 	return this->PixelArray;
-}
-
-unsigned char** BMPManager::getPixelArray2D()
-{
-	return this->PixelArray2D;
 }
 
 unsigned char* BMPManager::getGrayArray()
@@ -227,26 +184,8 @@ int BMPManager::getHeight()
 	return this->BMPInfoHeader.biHeight;
 }
 
-
-void BMPManager::restorePixelArray2D()
-{
-	int additionalPixels = this->BMPInfoHeader.biWidth % 4;
-	int bytesInRow = this->BMPInfoHeader.biWidth * 3 + additionalPixels;
-
-	this->PixelArray2D = new unsigned char* [bytesInRow];
-	for (int i = 0; i < bytesInRow; i++)
-		this->PixelArray2D[i] = new unsigned char[this->BMPInfoHeader.biHeight];
-
-	for (int y = this->BMPInfoHeader.biHeight - 1; y >= 0; y--)
-		for (int x = 0; x < bytesInRow; x++)
-		{
-			this->PixelArray2D[x][y] = this->PixelArray[y * (bytesInRow)+x];	//PixelArray2D is now in order form left top corner to right ottom corner
-		}																		//where PixelArray is as always from left bottom corner to right top corner
-
-	//INFO:
-	//this->BMPInfoHeader.biSizeImage == (this->BMPInfoHeader.biWidth*3 + additionalPixels) * BMPInfoHeader.biHeight)
-}
-
+//INFO:
+//this->BMPInfoHeader.biSizeImage == (this->BMPInfoHeader.biWidth*3 + additionalPixels) * BMPInfoHeader.biHeight)
 
 
 void BMPManager::distributeByteFile()
@@ -292,9 +231,6 @@ void BMPManager::extractPixelData()
 	this->grayOneChannelArray = new unsigned char[this->BMPInfoHeader.biHeight * this->BMPInfoHeader.biWidth];
 
 	if (!checkIfGray()) changeToGrayScale();
-
-	//2d array
-	this->restorePixelArray2D();
 
 }
 

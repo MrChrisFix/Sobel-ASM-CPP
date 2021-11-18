@@ -42,8 +42,6 @@ private:
 
 	unsigned char* PixelArray;
 
-	unsigned char** PixelArray2D;
-
 	unsigned char* grayOneChannelArray;
 
 public:
@@ -52,22 +50,18 @@ public:
 
 	System::Drawing::Bitmap^ getBitmap(); //Only for debug
 
-	System::Drawing::Bitmap^ createBitmap(unsigned char** PixelArray);
 	System::Drawing::Bitmap^ createBitmapFromGray();
 	System::Drawing::Bitmap^ createBitmapFromGray(unsigned char* Array);
 
 
 
 	unsigned char* getPixelArray();
-	unsigned char** getPixelArray2D();
 
 	unsigned char* getGrayArray();
 	void setGrayArray(unsigned char* arr);
 
 	int getWidth();
 	int getHeight();
-
-	void restorePixelArray2D();
 
 private:
 
