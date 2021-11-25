@@ -9,7 +9,7 @@ void Sobel_ASM::loadAsmDLL()
 
 	if (asmDLL)
 	{
-		this->wykonajASM = (FunkcjaASM_t)GetProcAddress(asmDLL, "FunkcjaASM");// w string jest nazwa funkcji
+		this->wykonajASM = (FunkcjaASM_t)GetProcAddress(asmDLL, "Sobel");// w string jest nazwa funkcji
 		if (wykonajASM!= nullptr)
 		{
 			loaded_library = true;
@@ -29,27 +29,43 @@ Sobel_ASM::~Sobel_ASM()
 
 }
 
-std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPManager* bitmap)
+std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPManager* bitmap, BYTE*& ptr)
 {
-	std::vector<std::thread> Threads;
+	//Slicing the array into parts for multithreading
+	int* length = new int[numerOfThreads];
+	int arraySize = bitmap->getHeight() * bitmap->getWidth();
+	int rest = arraySize % numerOfThreads;
+	int temp = rest;
 
-	/*for (int i = 0; i < numerOfThreads; i++)
-		Threads.push_back(std::thread());*/
+	for (int i = 0; i < numerOfThreads; i++)
+	{
+		length[i] = (arraySize - rest) / numerOfThreads;
+	}
+	for (int i = 0; i < rest; i++)
+	{
+		length[i]++;
+	}
 
 
+	//std::vector<std::thread> Threads;
+
+	
+
+	int* calculated = new int[arraySize];
+	int* helper = new int[arraySize];
 	auto start = std::chrono::steady_clock::now();
 	if (loaded_library)
 	{
-		//for (int i = 0; i < numerOfThreads; i++)
-		//{
-		//	Threads[i] = std::thread(*wykonajASM);
-		//}
+		for (int i = 0; i < numerOfThreads; i++)
+		{
+			//Threads.push_back(std::thread(wykonajASM, bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[0], 0));
+		}
 
-		////Sobel()
+		//
 		//for (int i = 0; i < numerOfThreads; i++)
 		//	Threads[i].join();
 
-		wykonajASM(1,2,3,4,5,6);
+		//wykonajASM(bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[0], 0);
 	}
 
 	auto end = std::chrono::steady_clock::now();

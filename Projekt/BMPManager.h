@@ -53,7 +53,7 @@ public:
 	System::Drawing::Bitmap^ createBitmapFromGray();
 	System::Drawing::Bitmap^ createBitmapFromGray(unsigned char* Array);
 
-
+	bool isOk = true;
 
 	unsigned char* getPixelArray();
 
@@ -64,6 +64,8 @@ public:
 	int getHeight();
 
 private:
+
+	void fileFormatNotSupported();
 
 	bool checkIfGray();
 	void changeToGrayScale();

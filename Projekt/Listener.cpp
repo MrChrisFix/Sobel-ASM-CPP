@@ -28,7 +28,13 @@ System::Drawing::Bitmap^ Listener::reactOnFileSelected(System::String^ fileName)
 	this->bmpManager = new BMPManager(msclr::interop::marshal_as<std::string>(fileName));
 
 	if (this->grayBitmap != nullptr) delete this->grayBitmap;
-	this->grayBitmap = this->bmpManager->createBitmapFromGray();
+	if (this->bmpManager->isOk) this->grayBitmap = this->bmpManager->createBitmapFromGray();
+	else 
+	{ 
+		delete this->originalBitmap;
+		this->originalBitmap = nullptr;
+		this->bmpManager = nullptr;
+	}
 
 	return this->originalBitmap;
 }
@@ -53,16 +59,16 @@ std::chrono::duration<double> Listener::reactOnStartButton(short id, short threa
 
 	if (this->originalBitmap != nullptr)
 	{
+		BYTE* arrayPtr;
 		if (id == 0) //Asembler
 		{
 			currentImage = 0;
-			this->Asm.executeInASM(threadNumber, bmpManager);
+			elapsed_seconds = this->Asm.executeInASM(threadNumber, bmpManager, arrayPtr);
 			pictureBox->Image = this->grayBitmap; //this->AsmChangedBitmap;
 		}
 		else if (id == 1) //C++
 		{
 			currentImage = 1;
-			BYTE* arrayPtr;
 
 			elapsed_seconds = this->Cpp.executeInCpp(threadNumber, bmpManager, arrayPtr);
 			this->CppBitmap = this->bmpManager->createBitmapFromGray(arrayPtr);

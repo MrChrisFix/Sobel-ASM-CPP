@@ -13,7 +13,7 @@ int* Vertical(BYTE* Array, int imageHeight, int imageWidth, int bytesToCalculate
 	//2  0 -2
 	//1  0 -1
 
-	int arraySize = imageHeight * imageWidth;
+	//int arraySize = imageHeight * imageWidth;
 	int* GX = new int[bytesToCalculate];
 
 	for (int i = 0; i < bytesToCalculate; i++) GX[i] = 0; //Init GX wih zeros
@@ -53,7 +53,7 @@ int* Horizontal(BYTE* Array, int imageHeight, int imageWidth, int bytesToCalcula
 	// 0  0  0
 	//-1 -2 -1
 
-	int arraySize = imageHeight * imageWidth;
+	//int arraySize = imageHeight * imageWidth;
 	int* GY = new int[bytesToCalculate];
 
 	for (int i = 0; i < bytesToCalculate; i++) GY[i] = 0; //Init GY wih zeros
@@ -84,32 +84,30 @@ int* Horizontal(BYTE* Array, int imageHeight, int imageWidth, int bytesToCalcula
 	return GY;
 }
 
-Expo BYTE* Sobel(BYTE* grayArray, int imageHeight, int imageWidth, int bytesToCalculate, int start, int* calculatedArray)
+Expo void Sobel(BYTE* grayArray, int imageHeight, int imageWidth, int bytesToCalculate, int start, int* calculatedArray)
 {
-	int arraySize = imageHeight * imageWidth;
+	//int arraySize = imageHeight * imageWidth;
 
 	int* Sobel_GX = Vertical(grayArray, imageHeight, imageWidth, bytesToCalculate, start);
 	int* Sobel_GY = Horizontal(grayArray, imageHeight, imageWidth, bytesToCalculate, start);
 
-	int* SobelMagnitude = new int[bytesToCalculate];
+	//int* SobelMagnitude = new int[bytesToCalculate];
 
 	for (int i = 0; i < bytesToCalculate; i++)
 	{
-		SobelMagnitude[i] = std::sqrt(pow(Sobel_GX[i], 2) + pow(Sobel_GY[i], 2));
+		calculatedArray[i+start] = std::sqrt(pow(Sobel_GX[i], 2) + pow(Sobel_GY[i], 2));
 	}
 
 	delete[] Sobel_GX;
 	delete[] Sobel_GY;
 
 
-	for (int i = start; i < start + bytesToCalculate; i++)
+	/*for (int i = start; i < start + bytesToCalculate; i++)
 	{
 		calculatedArray[i] = SobelMagnitude[i - start];
-	}
+	}*/
 
-	delete[] SobelMagnitude;
-		
-	return nullptr;
+	//delete[] SobelMagnitude;
 }
 
 Expo void Normalize(int* source, int minimum, int maximum, int bytesToCalculate, int start, BYTE*& calculatedArray)

@@ -12,30 +12,70 @@
 ; all next arguments are on the stack
 .data
 grayArrayStart QWORD 0	; pointer
-imageHeight WORD 0
-imageWidth WORD 0
-bytesToCalculate WORD 0
-whereToStart WORD 0
 readyArray QWORD 0		; pointer
-
+helperArray QWORD 0		; pointer
+imageHeight DWORD 0
+imageWidth DWORD 0
+bytesToCalculate DWORD 0
+whereToStart DWORD 0
 
 
 .code
-FunkcjaASM proc
+Sobel proc
+
+;Ladowanie argumentow
 
 mov grayArrayStart, RCX
-mov imageHeight, DX
-mov imageWidth, R8W
-mov bytesToCalculate, R9W
-mov dx, WORD PTR[rbp + 48]
-mov whereToStart, dx
-;mov rdx, QWORD PTR[rbp + 64] 
-;mov readyArray, rdx
+mov readyArray, RDX
+mov helperArray, R8
+mov imageHeight, R9D
+
+mov edx, DWORD PTR[rbp + 48]
+mov imageWidth, edx
+
+mov edx, DWORD PTR[rbp + 56]
+mov bytesToCalculate, edx 
+mov edx, DWORD PTR[rbp + 64]
+mov whereToStart, edx
+
+
 
 xor rax, rax
 
 ret
 
-FunkcjaASM endp
+Sobel endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Vertical proc
+
+;use readyArray
+
+
+Vertical endp	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Horizontal proc
+
+;use helperArray
+
+
+Horizontal endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Normalize proc
+
+
+
+Normalize endp
 
 end

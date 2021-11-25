@@ -2,7 +2,8 @@
 #include <chrono>
 #include "BMPManager.h"
 
-typedef int (*FunkcjaASM_t)(char, int, int ,int, int, int); //drugi nawias na argumenty
+//Arguments: BYTE* gray, int* calculated, int* helper, int imageHeignt, int imageWidth, int bytes to calculate, int start
+typedef int (*FunkcjaASM_t)(unsigned char* gray, int* calculated, int* help ,int height, __int32 width, __int32 bytes, __int32 start); //drugi nawias na argumenty
 
 
 ref class Sobel_ASM
@@ -18,7 +19,7 @@ public:
 	Sobel_ASM();
 	~Sobel_ASM();
 
-	std::chrono::duration<double> executeInASM(int numerOfThreads, BMPManager* bitmap);
+	std::chrono::duration<double> executeInASM(int numerOfThreads, BMPManager* bitmap, unsigned char*& ptr);
 
 };
 

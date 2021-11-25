@@ -44,12 +44,10 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 
 
 	for (int i = 0; i < numerOfThreads; i++)
-		while(true)
-			if (Threads[i].joinable())
-			{
-				Threads[i].join();
-				break;
-			}
+		if (Threads[i].joinable())
+		{
+			Threads[i].join();
+		}
 
 	int minimum, maximum;
 	minimum = maximum = calcArray[0];

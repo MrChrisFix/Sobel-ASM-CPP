@@ -369,7 +369,7 @@ namespace ProjektJA {
 	
 	private: System::Void textBox1_KeyPress(System::Object^ sender, System::Windows::Forms::KeyPressEventArgs^ e) 
 	{
-		if (e->KeyChar > 57 || e->KeyChar < 48) e->Handled = true;
+		if ((e->KeyChar > 57 || e->KeyChar < 48) && e->KeyChar != 8) e->Handled = true;
 	}
 };
 }

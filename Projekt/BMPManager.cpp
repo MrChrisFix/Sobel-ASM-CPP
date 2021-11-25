@@ -4,6 +4,11 @@
 
 BMPManager::BMPManager(std::string fileLocation)
 {
+	this->byteFile = nullptr;
+	this->PixelArray = nullptr;
+	this->grayOneChannelArray = nullptr;
+
+
 	this->File.open(fileLocation, std::ios::in | std::ios::binary | std::ios::ate);
 
 	if (this->File.is_open())
@@ -22,9 +27,9 @@ BMPManager::BMPManager(std::string fileLocation)
 
 BMPManager::~BMPManager()
 {
-	delete[] this->byteFile;
-	delete[] this->PixelArray;
-	delete[] this->grayOneChannelArray;
+	if(this->byteFile != nullptr) delete[] this->byteFile;
+	if (this->PixelArray != nullptr) delete[] this->PixelArray;
+	if (this->grayOneChannelArray != nullptr) delete[] this->grayOneChannelArray;
 
 
 	if (this->File.is_open()) this->File.close();
@@ -199,6 +204,12 @@ void BMPManager::distributeByteFile()
 	this->fileHeader.reserved2 = read16(currentByte);
 	this->fileHeader.Offset = read32(currentByte);
 
+	//Check if Bitmap type is supported
+	if (this->fileHeader.fType != 0x4d42)
+	{
+		this->fileFormatNotSupported();
+		return;
+	}
 
 	//Set the BMP info header
 	this->BMPInfoHeader.biSize = read32(currentByte);
@@ -214,6 +225,13 @@ void BMPManager::distributeByteFile()
 	this->BMPInfoHeader.biClrImportent = read8(currentByte);
 	this->BMPInfoHeader.biClrRotation = read8(currentByte);
 	this->BMPInfoHeader.biReserved = read16(currentByte);
+
+	//Check if Bitmap type is supported
+	if (this->BMPInfoHeader.biBitCount != 24)
+	{
+		this->fileFormatNotSupported();
+		return;
+	}
 
 	this->extractPixelData();
 
@@ -232,6 +250,26 @@ void BMPManager::extractPixelData()
 
 	if (!checkIfGray()) changeToGrayScale();
 
+	//delete this->byteFile;
+	//this->byteFile = nullptr;
+}
+
+void BMPManager::fileFormatNotSupported()
+{
+	// Initializes the variables to pass to the MessageBox::Show method.
+	System::String^ message = "The choosen bitmap format is not supported";
+	System::String^ caption = "File import error";
+	System::Windows::Forms::MessageBoxButtons buttons = System::Windows::Forms::MessageBoxButtons::OK;;
+	System::Windows::Forms::DialogResult result;
+
+	// Displays the MessageBox.
+	result = System::Windows::Forms::MessageBox::Show(message, caption, buttons);
+	if (result == System::Windows::Forms::DialogResult::OK)
+	{
+		delete this;
+		this->isOk = false;
+		return;
+	}
 }
 
 bool BMPManager::checkIfGray()
