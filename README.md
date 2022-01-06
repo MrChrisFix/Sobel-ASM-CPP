@@ -3,7 +3,7 @@
 This program is a student project for assembly classes at my university. It is a GUI programm that calculates edges using the Sobel operator.
 
 <h3> Objective </h3>
-The objective of the project was to write a multithread programm in C++ or C# and 2 DLLs: one in C++ or C and the second in assembly. My Topic was the edge detection using the Sobel operator.
+The objective of the project was to write a multithread programm in C++ or C# and 2 DLLs: one in C++ or C and the second in assembly with usage of vector instructions. My Topic was the edge detection using the Sobel operator.
 The goal is to learn assembly and to show that assembly CAN be faster than C++ or other programming languages.
 
 <h3> How to use this </h3>
