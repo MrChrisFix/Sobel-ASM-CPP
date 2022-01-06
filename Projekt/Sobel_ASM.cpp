@@ -65,7 +65,7 @@ std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPMan
 		//for (int i = 0; i < numerOfThreads; i++)
 		//	Threads[i].join();
 
-		//wykonajASM(bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[0], 0);
+		wykonajASM(bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[0], 0);
 	}
 
 	auto end = std::chrono::steady_clock::now();
