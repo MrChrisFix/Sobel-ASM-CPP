@@ -18,22 +18,24 @@ int* Vertical(BYTE* Array, int imageHeight, int imageWidth, int bytesToCalculate
 
 	for (int i = 0; i < bytesToCalculate; i++) GX[i] = 0; //Init GX wih zeros
 
-
+	//DISCLAIMER: 
+	// In the below calculation I use Array[i] * ... when this isn't required becouse
+	//it makes the edges prettier(more granient gray instead of just one-tone gray)
 	for (int i = start; i < start + bytesToCalculate; i++)
 	{
 		int row = (i - i % imageWidth)/imageWidth; //safe row
 		if (i % imageWidth == 0) //left wall
 		{
-			GX[i-start] += Array[i + 1] * -2 +Array[i] * 2;
-			if (row != 0) GX[i - start] += Array[i + 1 - imageWidth] * -1 +Array[i] * 1; //Not top
-			if (row != imageHeight - 1) GX[i - start] += Array[i + 1 + imageWidth] * -1 +Array[i] * 1; //Not bottom
+			GX[i - start] += Array[i + 1] * -2 + Array[i] * 2;
+			if (row != 0) GX[i - start] += Array[i + 1 - imageWidth] * -1 + Array[i] * 1; //Not top
+			if (row != imageHeight - 1) GX[i - start] += Array[i + 1 + imageWidth] * -1 + Array[i] * 1; //Not bottom
 
 		}
 		else if (i % imageWidth == imageWidth - 1) //right wall
 		{
-			GX[i - start] += Array[i - 1] * 2 +Array[i-1] * -2;
-			if (row != 0) GX[i - start] += Array[i - 1 - imageWidth] * 1 + Array[i - 1 - imageWidth] * -1; //Not top
-			if (row != imageHeight - 1) GX[i - start] += Array[i - 1 + imageWidth] * 1 + Array[i - 1 + imageWidth] * -1; //Not bottom
+			GX[i - start] += Array[i - 1] * 2 + Array[i - 1] * -2;
+			if (row != 0) GX[i - start] += Array[i - 1 - imageWidth] * 1 + Array[i] * -1; //Not top
+			if (row != imageHeight - 1) GX[i - start] += Array[i - 1 + imageWidth] * 1 + Array[i] * -1; //Not bottom
 		}
 		else //center
 		{
@@ -58,20 +60,23 @@ int* Horizontal(BYTE* Array, int imageHeight, int imageWidth, int bytesToCalcula
 
 	for (int i = 0; i < bytesToCalculate; i++) GY[i] = 0; //Init GY wih zeros
 
+	//DISCLAIMER: 
+	// In the below calculation I use Array[i] * ... when this isn't required becouse
+	//it makes the edges prettier(more granient gray instead of just plain gray)
 	for (int i = start; i < start + bytesToCalculate; i++)
 	{
 		int row = (i - i % imageWidth) / imageWidth;
 		if (row == 0) //Top wall
 		{
-			GY[i - start] += Array[i + imageWidth] * -2 + Array[i]*2;
-			if (i % imageWidth != 0) GY[i - start] += Array[i - 1 + imageWidth] *-1 + Array[i]*1;
-			if (i % imageWidth != imageWidth - 1) GY[i - start] += Array[i + 1 + imageWidth]*-1 + Array[i]*1; //+ Array[i] is a correction
+			GY[i - start] += Array[i + imageWidth] * -2 + Array[i] * 2;
+			if (i % imageWidth != 0) GY[i - start] += Array[i - 1 + imageWidth] * -1 + Array[i] * 1;
+			if (i % imageWidth != imageWidth - 1) GY[i - start] += Array[i + 1 + imageWidth] * -1 + Array[i] * 1;
 		}
 		else if (row == imageHeight - 1) //Bottom wall
 		{
 			GY[i - start] += Array[i - imageWidth] * 2 + Array[i] * -2;
-			if (i % imageWidth != 0) GY[i - start] += Array[i - 1 - imageWidth] *1 + Array[i]*-1;
-			if (i % imageWidth != imageWidth - 1) GY[i - start] += Array[i + 1 - imageWidth]*1 + Array[i]*-1;
+			if (i % imageWidth != 0) GY[i - start] += Array[i - 1 - imageWidth] * 1 + Array[i] * -1;
+			if (i % imageWidth != imageWidth - 1) GY[i - start] += Array[i + 1 - imageWidth] * 1 + Array[i] * -1;
 		}
 		else //Center
 		{
