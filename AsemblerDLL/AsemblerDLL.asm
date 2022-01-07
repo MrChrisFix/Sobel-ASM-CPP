@@ -46,30 +46,7 @@ call Horizontal
 
 ;All below in this function is testing garbage
 
-mov rax, grayArrayStart
 
-mov bl, [rax]
-mov cx, WORD PTR[grayArrayStart]
-
-pxor xmm0,xmm0
-pxor xmm1,xmm1
-
-pmovzxbw xmm0, QWORD PTR[rax] ;put bytes as words in xmm
-
-mov r8, 2
-mov r9, 0
-
-pinsrw xmm1, r8 ,0
-pinsrw xmm1, r9 ,1
-pinsrw xmm1, r9 ,2
-pinsrw xmm1, r8 ,3
-pinsrw xmm1, r8 ,4
-pinsrw xmm1, r9 ,5
-pinsrw xmm1, r8 ,6
-pinsrw xmm1, r9 ,7
-
-PMULLW xmm0, xmm1 ;multiply words and store lower 16-bits
-xor rax, rax
 
 ; Quick info for myself:
 ; SobelGX & SobelGY have the max value of 1020 in one cell
@@ -108,6 +85,8 @@ xor r15,r15
 ; r10d - ecx%imagewidth
 ; r14d - r12d +/- imageWidth
 ; r13b - byte holder for xmm insertion
+; rax - currnet row
+; r15d - where to end in grayArray
 
 ; GXMATRIX:
 ;  1  0 -1
@@ -126,12 +105,8 @@ mov r8, grayArrayStart
 mov r9, readyArray
 
 
-
-;pmovzxbw xmm0, QWORD PTR[r8] ;put bytes as words in xmm TEMPLATE
-
 mov ecx, whereToStart				; Counter for loop
 
-;TODO: Is this needed?
 mov r15d, ecx						; use r15 for end of numbers
 add r15d, bytesToCalculate			; needed to calculate in array
 
@@ -147,7 +122,7 @@ forloop:
 	sub eax, edx
 	mov r10d, edx	; save the modulo for later
 	xor edx,edx		; clean edx for division
-	div imageWidth	; final row saved in eax
+	div imageWidth	; finally row is saved in eax
 
 	
 	cmp r10d, 0
@@ -182,7 +157,7 @@ forloop:
 	ifelse:
 		mov r11d, imageWidth
 		dec r11d
-		cmp r10d, r11d					;i%imagewidth =?= imageHeight-1
+		cmp r10d, r11d					;i%imagewidth =?= imageWidth-1
 		jnz ifelse2
 
 		; ELSEIF statement - right wall:
@@ -258,7 +233,13 @@ forloop:
 
 ifend:
 	
-	pmullw xmm1, xmm0	;multiply
+	pmaddwd	xmm0, xmm1	; multiply and add words into dwords
+	phaddd xmm0, xmm0	; add 2 neighbouring dwords into one dword
+	phaddd xmm0, xmm0	; ^ and now the sum of all words(bytes) is in the first dword of xmm0
+
+	pextrd eax, xmm0, 0	; the sum is now in eax
+
+	mov [r9+rcx*4], eax
 	;mov [r8], sum
 
 
@@ -267,11 +248,11 @@ ifend:
 jnz forloop
 
 ; get back nonvolatile registers
-pop r12
-pop r13
-pop r14
-pop r15
 pop rdi
+pop r15
+pop r14
+pop r13
+pop r12
 
 ret
 Vertical endp	
@@ -280,10 +261,183 @@ Vertical endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Horizontal proc
+Horizontal proc		;use helperArray
+; save nonvolatile registers
+push r12
+push r13
+push r14
+push r15
+push rdi
 
-;use helperArray
+xor	r12,r12
+xor r13,r13
+xor r14,r14
+xor r15,r15
 
+;GYMATRIX:	
+; 1  2  1
+; 0  0  0
+;-1 -2 -1
+;Assingning the matrix to xmm1 in clokcwise order starting with up left corner
+mov r8, 0000000100020001h			; heximal values for first 4 numbers 
+pinsrq xmm1, r8, 0
+mov r8, 0000FFFFFFFEFFFFh			; heximal values for last 4 numbers
+pinsrq xmm1, r8, 1
+
+
+mov r8, grayArrayStart
+mov r9, helperArray
+
+
+mov ecx, whereToStart				; Counter for loop
+
+mov r15d, ecx						; use r15 for end of numbers
+add r15d, bytesToCalculate			; needed to calculate in array
+
+forloop:
+	xorpd xmm0, xmm0 ; Clean xmm0 register
+
+	;Calculate the current row
+	mov eax, ecx	; save the conter into eax
+	xor edx,edx		; clean edx for division
+	div imageWidth	; div to get modulo in edx. <-SLOW?
+	mov eax, ecx	; save the counter again
+	sub eax, edx
+	mov r10d, edx	; save the  i%imageWidth for later
+	xor edx,edx		; clean edx for division
+	div imageWidth	; finally row is saved in eax
+
+
+	cmp eax, 0
+	jnz ifelse
+	; IF statement - top wall:
+		mov r12d, ecx					; r12d = i
+		mov r14d, ecx
+		add r14d, imageWidth			; r14d = i+imageWidth
+
+		mov r13b, BYTE PTR[r8+r14]
+		pinsrw xmm0, r13d, 5
+		
+		;if(i%imageWidth!=0)
+		cmp r10d, 0
+		jz Hrow1
+
+		dec r14d						; r14d = i-1+imageWidth
+		mov r13b, BYTE PTR[r8+r14]
+		pinsrw xmm0, r13d, 6
+
+		Hrow1:
+		;if(i%imageWidth != imageWidth-1)
+		mov r11d, imageWidth;
+		dec r11d;
+		cmp r10d, r11d
+		jz ifend
+
+		mov r14d, ecx					; r14d = i
+		add r14d, imageWidth			; r14d = i+imageWidth
+		inc r14d						; r14d = i+1+imageWidth
+		mov r13b, BYTE PTR[r8+r14]
+		pinsrw xmm0, r13d, 4
+		jmp ifend
+
+	ifelse:
+		mov r11d, imageHeight
+		dec r11d
+		cmp eax, r11d					;row =?= imageHeight-1
+		jnz ifelse2
+
+		; ELSEIF statement - bottom wall:
+		mov r14d, ecx					; r14d = i
+		sub r14d, imageWidth			; rd14 = i-imageWidth
+		mov r13b, BYTE PTR[r8+r14]
+		pinsrw xmm0, r13d, 1
+
+		;if(i%imageWidth!=0)
+		cmp r10d, 0
+		jz Hrow2
+
+		dec r14d						; r14d = i-1-imageWidth
+		mov r13b, BYTE PTR[r8+r14]
+		pinsrw xmm0, r13d, 0
+
+		Hrow2:
+		;if(i%imageWidth != imageWidth-1)
+		mov r11d, imageWidth;
+		dec r11d;
+		cmp r10d, r11d
+		jz ifend
+
+		mov r14d, ecx					; r14d = i
+		sub r14d, imageWidth			; r14d = i-imageWidth
+		inc r14d						; r14d = i+1-imageWidth
+		mov r13b, BYTE PTR[r8+r14]
+		pinsrw xmm0, r13d, 2
+		jmp ifend
+	ifelse2:
+		; ELSE statement - center:
+		mov r14d, ecx
+		add r14d, imageWidth			; r14d = i+imageWidth
+		mov r13b, BYTE PTR[r8+r14]
+		pinsrw xmm0, r13d, 5
+
+		mov r12d, ecx
+		sub r12d, imageWidth			; r12d = i-imageWidth
+		mov r13b, BYTE PTR[r8+r12]
+		pinsrw xmm0, r13d, 1
+
+		;if(i%imageWidth!=0)
+		cmp r10d, 0
+		jz Hrow3
+
+		dec r12d						; r12d = i-1-imageWidth
+		mov r13b, BYTE PTR[r8+r12]
+		pinsrw xmm0, r13d, 0
+
+		dec r14d						; r14d = i-1+imageWidth
+		mov r13b, BYTE PTR[r8+r14]
+		pinsrw xmm0, r13d, 6
+
+		Hrow3:
+		;if(i%imageWidth != imageWidth-1)
+		mov r11d, imageWidth;
+		dec r11d;
+		cmp r10d, r11d
+		jz ifend
+
+		mov r14d, ecx
+		inc r14d
+		add r14d, imageWidth			; r14d = i+1+imageWidth
+		mov r13b, BYTE PTR[r8+r14]
+		pinsrw xmm0, r13d, 4
+
+		mov r14d, ecx
+		inc r14d
+		sub r14d, imageWidth			; r14d = i+1-imageWidth
+		mov r13b, BYTE PTR[r8+r14]
+		pinsrw xmm0, r13d, 2
+
+
+ifend:
+	
+	pmaddwd	xmm0, xmm1	; multiply and add words into dwords
+	phaddd xmm0, xmm0	; add 2 neighbouring dwords into one dword
+	phaddd xmm0, xmm0	; ^ and now the sum of all words(bytes) is in the first dword of xmm0
+
+	pextrd eax, xmm0, 0	; the sum is now in eax
+
+	mov [r9+rcx*4], eax
+
+
+	inc ecx
+	cmp ecx, r15d
+	jnz forloop
+
+; get back nonvolatile registers
+pop rdi
+pop r15
+pop r14
+pop r13
+pop r12
 ret
 Horizontal endp
 
