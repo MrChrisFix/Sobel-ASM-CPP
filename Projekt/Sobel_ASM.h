@@ -3,7 +3,9 @@
 #include "BMPManager.h"
 
 //Arguments: BYTE* gray, int* calculated, int* helper, int imageHeignt, int imageWidth, int bytes to calculate, int start
-typedef int (*FunkcjaASM_t)(unsigned char* gray, int* calculated, int* help ,int height, __int32 width, __int32 bytes, __int32 start); //drugi nawias na argumenty
+typedef int (*ASMSobelFunction_t)(unsigned char* gray, int* calculated, int* help ,int height, __int32 width, __int32 bytes, __int32 start);
+
+typedef int (*ASMNormalizeFunction_t)(int* calculated, unsigned char*normalized, __int32 minimum, __int32 maximum, __int32 bytes, __int32 start);
 
 
 ref class Sobel_ASM
@@ -11,7 +13,8 @@ ref class Sobel_ASM
 private:
 	void loadAsmDLL();
 	
-	FunkcjaASM_t wykonajASM;
+	ASMSobelFunction_t doASMSobel;
+	ASMNormalizeFunction_t doASMNormalization;
 
 	bool loaded_library;
 

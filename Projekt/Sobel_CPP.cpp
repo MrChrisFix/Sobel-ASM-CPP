@@ -49,6 +49,7 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 			Threads[i].join();
 		}
 
+	//Find minimum and maximum for normalization 
 	int minimum, maximum;
 	minimum = maximum = calcArray[0];
 	for (int i = 0; i < arraySize; i++)

@@ -22,6 +22,12 @@ whereToStart DWORD 0		; offset of bytes where the thread should start in the gra
 
 .code
 Sobel proc
+; save nonvolatile registers
+push r12
+push r13
+push r14
+push r15
+push rdi
 
 ;Load arguments
 mov grayArrayStart, RCX
@@ -44,25 +50,53 @@ xor ecx, ecx ; clearing register
 call Vertical
 call Horizontal
 
-;All below in this function is testing garbage
+;Calculate power of 2
+
+mov r8, readyArray		;GX Matrix
+mov r9, helperArray		;GY Matrix
+
+mov ecx, whereToStart	; counter for loop
+mov eax, bytesToCalculate
+mov r10, 4
+div r10					; eax - nuber of loops; edx - rest
+
+mov r10d, ecx;
+squareloop:
+	
+	vmovdqa xmm0, OWORD PTR[r8+r10]
+	vmovdqa xmm1, OWORD PTR[r9+r10]		
+
+	paddd xmm0, xmm1		; sum
+
+	cvtdq2ps xmm0, xmm0		; convert dword to single precision float
+
+	sqrtps xmm0, xmm0		; square root of xmm0
+
+	cvtps2dq xmm0, xmm0		; convert back to dword
+
+	movdqa OWORD PTR[r8+r10], xmm0
+
+	inc ecx
+	mov r10d, ecx
+	shl r10, 4				; multiply by 16
+	cmp ecx, eax
+	jnz squareloop
+
+	;TODO: not finished, need to calculate the rest
 
 
-
-; Quick info for myself:
-; SobelGX & SobelGY have the max value of 1020 in one cell
-; The calculated root can have 1400-1500 max in one cell
-; but exponentiation and rooting can be a problem.
-; For exponentation result I need DWORD, so it should be ok with readyArray, but
-; just in case i would change the pointer in Sobel_ASM to __int32
-
+; get back nonvolatile registers
+pop rdi
+pop r15
+pop r14
+pop r13
+pop r12
 
 ret
 
 Sobel endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Vertical proc ;use readyArray
 
@@ -239,8 +273,9 @@ ifend:
 
 	pextrd eax, xmm0, 0	; the sum is now in eax
 
+	imul eax, eax		; calculate the power of 2 of the number for later
+
 	mov [r9+rcx*4], eax
-	;mov [r8], sum
 
 
 	inc ecx ;increment counter
@@ -257,9 +292,7 @@ pop r12
 ret
 Vertical endp	
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Horizontal proc		;use helperArray
 ; save nonvolatile registers
@@ -425,8 +458,8 @@ ifend:
 
 	pextrd eax, xmm0, 0	; the sum is now in eax
 
+	imul eax, eax		; calculate the power of 2 of the number for later
 	mov [r9+rcx*4], eax
-
 
 	inc ecx
 	cmp ecx, r15d
@@ -441,14 +474,56 @@ pop r12
 ret
 Horizontal endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Normalize proc
+; save nonvolatile registers
+push r12
+push r13
+push r14
+push r15
+push rdi
+
+; RCX -> pointer to array
+; RDX -> normalized output array
+; R8  -> minimum
+; R9  -> maximum
+; R14 -> bytesToCalculate
+; R10 -> whereToStart -> counter for loop
+
+mov r14d, DWORD PTR[rbp + 48]
+mov r10d, DWORD PTR[rbp + 56]
+mov r15, rdx					; move output array pointer to r15
+xor rdx,rdx
+
+add r14, r10					; r14 = bytesToCalculate+whereToStart
+
+mov r11d, r9d
+sub r11d, r8d					; r11d = diffenerce = max-min
+jnz normalLoop		
+inc r11d						; if (r11d == 0) r11d = 1 - preventiong division by 0
+
+normalLoop:
+	mov r13d, DWORD PTR[rcx+r10*4]
+	sub r13d, r8d				; r13d = Array[i]-minimum
+	mov eax, r13d
+	shl eax, 8					; eax*2^8
+	sub eax, r13d				; eax = r13d*255 = r13d*(256-1) = r13d*256-r13d
+	div r11d					; eax = r13d*255/r11d -> (Array[i]-minimum)*255/diffenerce
+
+	mov BYTE PTR[r15+r10], al
+	inc r10d
+	cmp r10d, r14d
+jnz normalLoop
 
 
-
+; get back nonvolatile registers
+pop rdi
+pop r15
+pop r14
+pop r13
+pop r12
+ret
 Normalize endp
 
 end

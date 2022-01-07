@@ -9,8 +9,10 @@ void Sobel_ASM::loadAsmDLL()
 
 	if (asmDLL)
 	{
-		this->wykonajASM = (FunkcjaASM_t)GetProcAddress(asmDLL, "Sobel");// w string jest nazwa funkcji
-		if (wykonajASM!= nullptr)
+		this->doASMSobel = (ASMSobelFunction_t)GetProcAddress(asmDLL, "Sobel");// in the string is the asm proc name
+		this->doASMNormalization = (ASMNormalizeFunction_t)GetProcAddress(asmDLL, "Normalize");
+
+		if (doASMSobel!= nullptr && doASMNormalization != nullptr)
 		{
 			loaded_library = true;
 		}
@@ -29,7 +31,7 @@ Sobel_ASM::~Sobel_ASM()
 
 }
 
-std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPManager* bitmap, BYTE*& ptr)
+std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPManager* bitmap, unsigned char*& ptr)
 {
 	//Slicing the array into parts for multithreading
 	int* length = new int[numerOfThreads];
@@ -52,20 +54,52 @@ std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPMan
 	
 
 	int* calculated = new int[arraySize];
+	BYTE* normalized = new BYTE[arraySize];
+	for (int i = 0; i < arraySize; i++) calculated[i] = 0;
 	int* helper = new int[arraySize];
+	int arrayStartOffset = 0;
 	auto start = std::chrono::steady_clock::now();
 	if (loaded_library)
 	{
+		//First use of threads
 		for (int i = 0; i < numerOfThreads; i++)
 		{
-			//Threads.push_back(std::thread(wykonajASM, bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[0], 0));
+			//Threads.push_back(std::thread(wykonajASM, bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[i], arrayStartOffset));
+			//arrayStartOffset += length[i];
 		}
 
-		//
-		//for (int i = 0; i < numerOfThreads; i++)
-		//	Threads[i].join();
+		/*for (int i = 0; i < numerOfThreads; i++)
+			if (Threads[i].joinable())
+			{
+				Threads[i].join();
+			}*/
 
-		wykonajASM(bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[0], 0);
+		doASMSobel(bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[0], 0);
+
+		//Find minimum and maximum for normalization 
+		int minimum, maximum;
+		minimum = maximum = calculated[0];
+		for (int i = 0; i < arraySize; i++)
+		{
+			if (calculated[i] < minimum) minimum = calculated[i];
+			if (calculated[i] > maximum) maximum = calculated[i];
+		}
+
+		//Second use of threads
+		for (int i = 0; i < numerOfThreads; i++)
+		{
+			//Threads.push_back(std::thread(wykonajASM, bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[i], arrayStartOffset));
+			//arrayStartOffset += length[i];
+		}
+		doASMNormalization(calculated, normalized, minimum, maximum, length[0], 0);
+
+		/*for (int i = 0; i < numerOfThreads; i++)
+			if (Threads[i].joinable())
+			{
+				Threads[i].join();
+		}*/
+
+		ptr = normalized;
 	}
 
 	auto end = std::chrono::steady_clock::now();

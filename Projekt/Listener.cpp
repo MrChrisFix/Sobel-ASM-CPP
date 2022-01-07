@@ -64,7 +64,9 @@ std::chrono::duration<double> Listener::reactOnStartButton(short id, short threa
 		{
 			currentImage = 0;
 			elapsed_seconds = this->Asm.executeInASM(threadNumber, bmpManager, arrayPtr);
-			pictureBox->Image = this->grayBitmap; //this->AsmChangedBitmap;
+			this->AsmBitmap = this->bmpManager->createBitmapFromGray(arrayPtr);
+			//pictureBox->Image = this->grayBitmap; //this->AsmChangedBitmap;
+			pictureBox->Image = this->AsmBitmap;
 		}
 		else if (id == 1) //C++
 		{
