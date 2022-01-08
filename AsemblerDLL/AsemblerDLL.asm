@@ -4,21 +4,23 @@
 ;.model	flat, C
 ;endif
 
-
-; 1 argument: RCX
-; 2 argument: RDX
-; 3 argument: R8
-; 4 argument: R9
-; all next arguments are on the stack
 .data
 grayArrayStart QWORD 0		; pointer to the read array
 readyArray QWORD 0			; pointer for the modified array
 helperArray QWORD 0			; pointer for a helper array
 imageHeight DWORD 0			; the height of the image
 imageWidth DWORD 0			; the width of the image
+
+;TODO: thoose are non-global, delete them and put somewere else(stack/register)
 bytesToCalculate DWORD 0	; amount of bytes the thread has to calculate
 whereToStart DWORD 0		; offset of bytes where the thread should start in the grayArray
 
+; Arguments (ints) passed from C++:
+; 1 argument: RCX
+; 2 argument: RDX
+; 3 argument: R8
+; 4 argument: R9
+; all next arguments are on the stack
 
 .code
 Sobel proc
@@ -28,6 +30,7 @@ push r13
 push r14
 push r15
 push rdi
+push rsi
 
 ;Load arguments
 mov grayArrayStart, RCX
@@ -39,9 +42,15 @@ mov edx, DWORD PTR[rbp + 48]
 mov imageWidth, edx
 
 mov edx, DWORD PTR[rbp + 56]
-mov bytesToCalculate, edx 
+mov bytesToCalculate, edx
+mov r15d, edx				;TODO: delete
 mov edx, DWORD PTR[rbp + 64]
-mov whereToStart, edx
+mov whereToStart, edx		;TODO: delete
+mov r14d, edx
+
+; R14 always has whereToStart
+; R15 always has bytesToCalculate
+
 
 xor eax, eax ; clearing register
 xor ebx, ebx ; clearing register
@@ -50,21 +59,24 @@ xor ecx, ecx ; clearing register
 call Vertical
 call Horizontal
 
-;Calculate power of 2
 
-mov r8, readyArray		;GX Matrix
-mov r9, helperArray		;GY Matrix
+mov rdi, readyArray			;GX Matrix
+mov rsi, helperArray		;GY Matrix
 
-mov ecx, whereToStart	; counter for loop
-mov eax, bytesToCalculate
-mov r10, 4
-div r10					; eax - nuber of loops; edx - rest
 
-mov r10d, ecx;
+mov ecx, 0					; counter for loop
+mov eax, r15d				;calculate number of loops
+mov r11, 4					; divide by 4 becouse dword is 4 bytes
+div r11						; eax = nuber of loops; edx = rest
+
+;mov r10d, ecx
+mov r10d, r14d
+imul r10d, 4
 squareloop:
-	
-	vmovdqa xmm0, OWORD PTR[r8+r10]
-	vmovdqa xmm1, OWORD PTR[r9+r10]		
+
+	;movdqa xmm0, OWORD PTR[rdi+r10]	; possible alterante instruction
+	vmovdqa xmm0, OWORD PTR[rdi+r10]	;The error is possobly bc i try to read e.g 1/4 of the first int nad 3/4 of the second
+	vmovdqa xmm1, OWORD PTR[rsi+r10]
 
 	paddd xmm0, xmm1		; sum
 
@@ -74,18 +86,38 @@ squareloop:
 
 	cvtps2dq xmm0, xmm0		; convert back to dword
 
-	movdqa OWORD PTR[r8+r10], xmm0
+	movdqa OWORD PTR[rdi+r10], xmm0
 
 	inc ecx
-	mov r10d, ecx
-	shl r10, 4				; multiply by 16
+	add r10d, 16				
 	cmp ecx, eax
 	jnz squareloop
 
 	;TODO: not finished, need to calculate the rest
+	;pxor xmm0, xmm0
+	;pxor xmm1, xmm1
+;restLoop:
+	;cmp rdx, 0
+	;jz TheEnd
+
+	;mov r8, DWORD PTR[rdi+r10]
+	;mov r9, DWORD PTR[rsi+r10]
+
+	;pinsrq xmm0, r8, 0
+	;pinsrq xmm1, r9, 0
 
 
+	;paddd xmm0, xmm1		; sum
+	;cvtdq2ps xmm0, xmm0		; convert dword to single precision float
+	;sqrtps xmm0, xmm0		; square root of xmm0
+	;cvtps2dq xmm0, xmm0		; convert back to dword
+
+	;movdqa OWORD PTR[rdi+r10], xmm0
+
+
+TheEnd:
 ; get back nonvolatile registers
+pop rsi
 pop rdi
 pop r15
 pop r14
@@ -100,27 +132,20 @@ Sobel endp
 
 Vertical proc ;use readyArray
 
-; save nonvolatile registers
-push r12
-push r13
-push r14
-push r15
-push rdi
-
-xor	r12,r12
-xor r13,r13
-xor r14,r14
-xor r15,r15
 ;Registers:
-; r8 - grayArrayStart
-; r9 - readyArray
-; ecx - loop couner
+; r14 - whereToStart
+; r15 - bytesToCalculate
+; rsi - grayArrayStart
+; rdi - readyArray
+; rax - current row
+; rcx - loop couner
+; r8 - temporary value
+; r11 - register used in cmp
 ; r12d - ecx +/- 1
 ; r10d - ecx%imagewidth
 ; r14d - r12d +/- imageWidth
 ; r13b - byte holder for xmm insertion
-; rax - currnet row
-; r15d - where to end in grayArray
+; r9d - where to end in grayArray
 
 ; GXMATRIX:
 ;  1  0 -1
@@ -135,14 +160,14 @@ mov r8, 000200010000FFFFh			; heximal values for last 4 numbers
 pinsrq xmm1, r8, 1
 
 
-mov r8, grayArrayStart
-mov r9, readyArray
+mov rsi, grayArrayStart
+mov rdi, readyArray
 
 
-mov ecx, whereToStart				; Counter for loop
+mov ecx, r14d						; Counter for loop
 
-mov r15d, ecx						; use r15 for end of numbers
-add r15d, bytesToCalculate			; needed to calculate in array
+mov r9d, ecx						; use r9 for end of loop
+add r9d, r15d						; ^
 
 forloop:
 	
@@ -162,19 +187,25 @@ forloop:
 	cmp r10d, 0
 	jnz ifelse
 	; IF statement - left wall:
+		mov r13b, BYTE PTR[rsi+rcx]		; Correction
+		pinsrw xmm0, r13d, 7
+
 		mov r12d, ecx					; r12d = i
 		inc r12d						; i++
 
-		mov r13b, BYTE PTR[r8+r12]
+		mov r13b, BYTE PTR[rsi+r12]
 		pinsrw xmm0, r13d, 3
 		
 		;if(row!=0)
 		cmp eax, 0
 		jz row1
 
-		mov r14d, r12d					;r14d = i+1
-		sub r14d, imageWidth			;r14d = (i+1)-imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		mov r13b, BYTE PTR[rsi+rcx]		; Correction
+		pinsrw xmm0, r13d, 0
+
+		mov r8d, r12d					;r8d = i+1
+		sub r8d, imageWidth				;r8d = (i+1)-imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d, 2
 
 		row1:
@@ -184,10 +215,13 @@ forloop:
 		cmp eax, r11d
 		jz ifend
 
-		mov r14d, imageWidth			; r14d = imageWidth
-		add r14d, ecx					; r14d = imageWidth+i
-		inc r14d						; r14d = imageWidth+i+1
-		mov r13b, BYTE PTR[r8+r14]
+		mov r13b, BYTE PTR[rsi+rcx]		; Correction
+		pinsrw xmm0, r13d, 6
+
+		mov r8d, imageWidth				; r8d = imageWidth
+		add r8d, ecx					; r8d = imageWidth+i
+		inc r8d						; r8d = imageWidth+i+1
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d, 4
 
 		jmp ifend
@@ -199,19 +233,25 @@ forloop:
 		jnz ifelse2
 
 		; ELSEIF statement - right wall:
+		mov r13b, BYTE PTR[rsi+rcx]		; Correction
+		pinsrw xmm0, r13d, 3
+
 		mov r12d, ecx					; r12d = i
 		dec r12d						; r12d = i-1
 
-		mov r13b, BYTE PTR[r8+r12]
+		mov r13b, BYTE PTR[rsi+r12]
 		pinsrw xmm0, r13d, 7
 
 		;if(row!=0)
 		cmp eax, 0
 		jz row2
 
-		mov r14d, r12d					;r14d = i-1
-		sub r14d, imageWidth			;r14d = (i-1)-imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		mov r13b, BYTE PTR[rsi+rcx]		; Correction
+		pinsrw xmm0, r13d, 2
+
+		mov r8d, r12d					;r8d = i-1
+		sub r8d, imageWidth				;r8d = (i-1)-imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d, 0
 
 		row2:
@@ -221,10 +261,13 @@ forloop:
 		cmp eax, r11d
 		jz ifend
 
-		mov r14d, imageWidth			;r14d = imageWidth
-		add r14d, ecx					;r14d = imageWidth+i
-		dec r14d						;r14d = imageWidth+i-1
-		mov r13b, BYTE PTR[r8+r14]
+		mov r13b, BYTE PTR[rsi+rcx]		; Correction
+		pinsrw xmm0, r13d, 4
+
+		mov r8d, imageWidth				;r8d = imageWidth
+		add r8d, ecx					;r8d = imageWidth+i
+		dec r8d							;r8d = imageWidth+i-1
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d ,6
 
 		jmp ifend
@@ -234,25 +277,25 @@ forloop:
 		mov r12d, ecx					; r12d = i
 		inc r12d						; i+1
 
-		mov r13b, BYTE PTR[r8+r12]
+		mov r13b, BYTE PTR[rsi+r12]
 		pinsrw xmm0, r13d, 3
 		
 		sub r12d, 2						; r12d = i-1
 
-		mov r13b, BYTE PTR[r8+r12]
+		mov r13b, BYTE PTR[rsi+r12]
 		pinsrw xmm0, r13d, 7
 
 		;if(row!=0)
 		cmp eax, 0
 		jz row3
 
-		mov r14d, r12d					;r14d = i-1
-		sub r14d, imageWidth			;r14d = (i-1)-imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		mov r8d, r12d					;r8d = i-1
+		sub r8d, imageWidth				;r8d = (i-1)-imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d ,0
 
-		add r14d, 2						;r14d = i+1-imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		add r8d, 2						;r8d = i+1-imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d ,2
 
 		row3:
@@ -262,14 +305,14 @@ forloop:
 		cmp eax, r11d
 		jz ifend
 
-		mov r14d, imageWidth			;r14d = imageWidth
-		add r14d, ecx					;r14d = imageWidth +i
-		inc r14d						;r14d = i+1+imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		mov r8d, imageWidth				;r8d = imageWidth
+		add r8d, ecx					;r8d = imageWidth +i
+		inc r8d							;r8d = i+1+imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d ,4
 
-		sub r14d,2						;r14d = i-1+imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		sub r8d,2						;r8d = i-1+imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d ,6
 
 ifend:
@@ -282,19 +325,12 @@ ifend:
 
 	imul eax, eax		; calculate the power of 2 of the number for later
 
-	mov [r9+rcx*4], eax
+	mov [rdi+rcx*4], eax
 
 
-	inc ecx ;increment counter
-	cmp ecx, r15d
+	inc ecx				;increment counter
+	cmp ecx, r9d
 jnz forloop
-
-; get back nonvolatile registers
-pop rdi
-pop r15
-pop r14
-pop r13
-pop r12
 
 ret
 Vertical endp	
@@ -302,17 +338,20 @@ Vertical endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Horizontal proc		;use helperArray
-; save nonvolatile registers
-push r12
-push r13
-push r14
-push r15
-push rdi
-
-xor	r12,r12
-xor r13,r13
-xor r14,r14
-xor r15,r15
+;Registers:
+; r14 - whereToStart
+; r15 - bytesToCalculate
+; rsi - grayArrayStart
+; rdi - readyArray
+; rax - current row
+; rcx - loop couner
+; r8 - temporary value
+; r11 - register used in cmp
+; r12d - ecx +/- 1
+; r10d - ecx%imagewidth
+; r14d - r12d +/- imageWidth
+; r13b - byte holder for xmm insertion
+; r9d - where to end in grayArray
 
 ;GYMATRIX:	
 ; 1  2  1
@@ -325,14 +364,14 @@ mov r8, 0000FFFFFFFEFFFFh			; heximal values for last 4 numbers
 pinsrq xmm1, r8, 1
 
 
-mov r8, grayArrayStart
-mov r9, helperArray
+mov rsi, grayArrayStart
+mov rdi, helperArray
 
 
-mov ecx, whereToStart				; Counter for loop
+mov ecx, r14d						; Counter for loop
 
-mov r15d, ecx						; use r15 for end of numbers
-add r15d, bytesToCalculate			; needed to calculate in array
+mov r9d, ecx						; use r9 for end of loop
+add r9d, r15d						; ^
 
 forloop:
 	xorpd xmm0, xmm0 ; Clean xmm0 register
@@ -351,23 +390,23 @@ forloop:
 	cmp eax, 0
 	jnz ifelse
 	; IF statement - top wall:
-		mov r13b, BYTE PTR[r8+rcx]		;Correction
+		mov r13b, BYTE PTR[rsi+rcx]		;Correction
 		pinsrw xmm0, r13d, 1
 
-		mov r14d, ecx					; r14d = i
-		add r14d, imageWidth			; r14d = i+imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		mov r8d, ecx					; r8d = i
+		add r8d, imageWidth				; r8d = i+imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d, 5
 		
 		;if(i%imageWidth!=0)
 		cmp r10d, 0
 		jz Hrow1
 
-		dec r14d						; r14d = i-1+imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		dec r8d							; r8d = i-1+imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d, 6
 
-		mov r13b, BYTE PTR[r8+rcx]		;Correction
+		mov r13b, BYTE PTR[rsi+rcx]		;Correction
 		pinsrw xmm0, r13d, 0
 
 		Hrow1:
@@ -377,13 +416,13 @@ forloop:
 		cmp r10d, r11d
 		jz ifend
 
-		mov r14d, ecx					; r14d = i
-		add r14d, imageWidth			; r14d = i+imageWidth
-		inc r14d						; r14d = i+1+imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		mov r8d, ecx					; r8d = i
+		add r8d, imageWidth				; r8d = i+imageWidth
+		inc r8d							; r8d = i+1+imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d, 4
 
-		mov r13b, BYTE PTR[r8+rcx]		;Correction
+		mov r13b, BYTE PTR[rsi+rcx]		;Correction
 		pinsrw xmm0, r13d, 2
 		jmp ifend
 
@@ -394,23 +433,23 @@ forloop:
 		jnz ifelse2
 
 		; ELSEIF statement - bottom wall:
-		mov r13b, BYTE PTR[r8+rcx]		;Correction
+		mov r13b, BYTE PTR[rsi+rcx]		;Correction
 		pinsrw xmm0, r13d, 5
 
-		mov r14d, ecx					; r14d = i
-		sub r14d, imageWidth			; rd14 = i-imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		mov r8d, ecx					; r8d = i
+		sub r8d, imageWidth				; r8d = i-imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d, 1
 
 		;if(i%imageWidth!=0)
 		cmp r10d, 0
 		jz Hrow2
 
-		mov r13b, BYTE PTR[r8+rcx]		;Correction
+		mov r13b, BYTE PTR[rsi+rcx]		;Correction
 		pinsrw xmm0, r13d, 6
 
-		dec r14d						; r14d = i-1-imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		dec r8d							; r8d = i-1-imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d, 0
 
 		Hrow2:
@@ -420,26 +459,26 @@ forloop:
 		cmp r10d, r11d
 		jz ifend
 
-		mov r13b, BYTE PTR[r8+rcx]		;Correction
+		mov r13b, BYTE PTR[rsi+rcx]		;Correction
 		pinsrw xmm0, r13d, 4
 
-		mov r14d, ecx					; r14d = i
-		sub r14d, imageWidth			; r14d = i-imageWidth
-		inc r14d						; r14d = i+1-imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		mov r8d, ecx					; r8d = i
+		sub r8d, imageWidth				; r8d = i-imageWidth
+		inc r8d							; r8d = i+1-imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d, 2
 		jmp ifend
 
 	ifelse2:
 		; ELSE statement - center:
-		mov r14d, ecx
-		add r14d, imageWidth			; r14d = i+imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		mov r8d, ecx
+		add r8d, imageWidth				; r8d = i+imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d, 5
 
 		mov r12d, ecx
 		sub r12d, imageWidth			; r12d = i-imageWidth
-		mov r13b, BYTE PTR[r8+r12]
+		mov r13b, BYTE PTR[rsi+r12]
 		pinsrw xmm0, r13d, 1
 
 		;if(i%imageWidth!=0)
@@ -447,11 +486,11 @@ forloop:
 		jz Hrow3
 
 		dec r12d						; r12d = i-1-imageWidth
-		mov r13b, BYTE PTR[r8+r12]
+		mov r13b, BYTE PTR[rsi+r12]
 		pinsrw xmm0, r13d, 0
 
-		dec r14d						; r14d = i-1+imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		dec r8d							; r8d = i-1+imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d, 6
 
 		Hrow3:
@@ -461,16 +500,16 @@ forloop:
 		cmp r10d, r11d
 		jz ifend
 
-		mov r14d, ecx
-		inc r14d
-		add r14d, imageWidth			; r14d = i+1+imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		mov r8d, ecx
+		inc r8d
+		add r8d, imageWidth				; r8d = i+1+imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d, 4
 
-		mov r14d, ecx
-		inc r14d
-		sub r14d, imageWidth			; r14d = i+1-imageWidth
-		mov r13b, BYTE PTR[r8+r14]
+		mov r8d, ecx
+		inc r8d
+		sub r8d, imageWidth				; r8d = i+1-imageWidth
+		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d, 2
 
 
@@ -483,18 +522,12 @@ ifend:
 	pextrd eax, xmm0, 0	; the sum is now in eax
 
 	imul eax, eax		; calculate the power of 2 of the number for later
-	mov [r9+rcx*4], eax
+	mov [rdi+rcx*4], eax
 
 	inc ecx
-	cmp ecx, r15d
+	cmp ecx, r9d
 	jnz forloop
 
-; get back nonvolatile registers
-pop rdi
-pop r15
-pop r14
-pop r13
-pop r12
 ret
 Horizontal endp
 
@@ -507,6 +540,7 @@ push r13
 push r14
 push r15
 push rdi
+push rsi
 
 ; RCX -> pointer to array
 ; RDX -> normalized output array
@@ -542,6 +576,7 @@ jnz normalLoop
 
 
 ; get back nonvolatile registers
+pop rsi
 pop rdi
 pop r15
 pop r14

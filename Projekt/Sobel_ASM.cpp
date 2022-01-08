@@ -37,7 +37,6 @@ std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPMan
 	int* length = new int[numerOfThreads];
 	int arraySize = bitmap->getHeight() * bitmap->getWidth();
 	int rest = arraySize % numerOfThreads;
-	int temp = rest;
 
 	for (int i = 0; i < numerOfThreads; i++)
 	{
@@ -49,7 +48,7 @@ std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPMan
 	}
 
 
-	//std::vector<std::thread> Threads;
+	std::vector<std::thread> Threads;
 
 	
 
@@ -58,23 +57,24 @@ std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPMan
 	for (int i = 0; i < arraySize; i++) calculated[i] = 0;
 	int* helper = new int[arraySize];
 	int arrayStartOffset = 0;
+
 	auto start = std::chrono::steady_clock::now();
 	if (loaded_library)
 	{
 		//First use of threads
 		for (int i = 0; i < numerOfThreads; i++)
 		{
-			//Threads.push_back(std::thread(wykonajASM, bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[i], arrayStartOffset));
-			//arrayStartOffset += length[i];
+			Threads.push_back(std::thread(*doASMSobel, bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[i], arrayStartOffset));
+			arrayStartOffset += length[i];
 		}
 
-		/*for (int i = 0; i < numerOfThreads; i++)
+		for (int i = 0; i < numerOfThreads; i++)
 			if (Threads[i].joinable())
 			{
 				Threads[i].join();
-		}*/
+			}
 
-		doASMSobel(bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[0], 0);
+		//doASMSobel(bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[0], 0);
 
 		//Find minimum and maximum for normalization 
 		int minimum, maximum;
@@ -86,18 +86,19 @@ std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPMan
 		}
 
 		//Second use of threads
+		arrayStartOffset = 0;
 		for (int i = 0; i < numerOfThreads; i++)
 		{
-			//Threads.push_back(std::thread(wykonajASM, bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[i], arrayStartOffset));
-			//arrayStartOffset += length[i];
+			Threads[i] = std::thread(*doASMNormalization, calculated, normalized, minimum, maximum, length[i], arrayStartOffset);
+			arrayStartOffset += length[i];
 		}
-		doASMNormalization(calculated, normalized, minimum, maximum, length[0], 0);
+		//doASMNormalization(calculated, normalized, minimum, maximum, length[0], 0);
 
-		/*for (int i = 0; i < numerOfThreads; i++)
+		for (int i = 0; i < numerOfThreads; i++)
 			if (Threads[i].joinable())
 			{
 				Threads[i].join();
-		}*/
+			}
 
 		ptr = normalized;
 	}
@@ -108,7 +109,7 @@ std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPMan
 	if (length != nullptr) delete[] length;
 	if (calculated != nullptr) delete[] calculated;
 	if (helper != nullptr) delete[] helper;
-	//Threads.clear();
+	Threads.clear();
 
 	return elapsed_seconds;
 }
