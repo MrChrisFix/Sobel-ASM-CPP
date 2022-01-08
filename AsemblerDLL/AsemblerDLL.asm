@@ -169,22 +169,26 @@ forloop:
 		pinsrw xmm0, r13d, 3
 		
 		;if(row!=0)
-		cmp edx, 0
+		cmp eax, 0
 		jz row1
+
 		mov r14d, r12d					;r14d = i+1
 		sub r14d, imageWidth			;r14d = (i+1)-imageWidth
 		mov r13b, BYTE PTR[r8+r14]
-		pinsrw xmm0, r13d ,2
+		pinsrw xmm0, r13d, 2
+
 		row1:
 		;if(row != imageHeight-1)
 		mov r11d, imageHeight;
 		dec r11d;
-		cmp edx, r11d
+		cmp eax, r11d
 		jz ifend
-		mov r14d, imageWidth			;r14d = imageWidth
-		add r14d, r12d					;r14d = imageWidth+(i+1)
+
+		mov r14d, imageWidth			; r14d = imageWidth
+		add r14d, ecx					; r14d = imageWidth+i
+		inc r14d						; r14d = imageWidth+i+1
 		mov r13b, BYTE PTR[r8+r14]
-		pinsrw xmm0, r13d ,4
+		pinsrw xmm0, r13d, 4
 
 		jmp ifend
 
@@ -195,31 +199,36 @@ forloop:
 		jnz ifelse2
 
 		; ELSEIF statement - right wall:
-		mov r12d, ecx
-		dec r12d ;i-1
+		mov r12d, ecx					; r12d = i
+		dec r12d						; r12d = i-1
 
 		mov r13b, BYTE PTR[r8+r12]
 		pinsrw xmm0, r13d, 7
 
 		;if(row!=0)
-		cmp edx, 0
+		cmp eax, 0
 		jz row2
+
 		mov r14d, r12d					;r14d = i-1
 		sub r14d, imageWidth			;r14d = (i-1)-imageWidth
 		mov r13b, BYTE PTR[r8+r14]
-		pinsrw xmm0, r13d ,0
+		pinsrw xmm0, r13d, 0
+
 		row2:
 		;if(row != imageHeight-1)
 		mov r11d, imageHeight;
 		dec r11d;
-		cmp edx, r11d
+		cmp eax, r11d
 		jz ifend
+
 		mov r14d, imageWidth			;r14d = imageWidth
-		add r14d, r12d					;r14d = imageWidth+(i-1)
+		add r14d, ecx					;r14d = imageWidth+i
+		dec r14d						;r14d = imageWidth+i-1
 		mov r13b, BYTE PTR[r8+r14]
 		pinsrw xmm0, r13d ,6
 
 		jmp ifend
+
 	ifelse2:
 		; ELSE statement - center:
 		mov r12d, ecx					; r12d = i
@@ -234,34 +243,32 @@ forloop:
 		pinsrw xmm0, r13d, 7
 
 		;if(row!=0)
-		cmp edx, 0
+		cmp eax, 0
 		jz row3
+
 		mov r14d, r12d					;r14d = i-1
 		sub r14d, imageWidth			;r14d = (i-1)-imageWidth
 		mov r13b, BYTE PTR[r8+r14]
 		pinsrw xmm0, r13d ,0
 
-		add r12d, 2						;r12d +=2 -> r12d = i+1
-
-		mov r14d, r12d					;r14d = i+1
-		sub r14d, imageWidth			;r14d = (i+1)-imageWidth
+		add r14d, 2						;r14d = i+1-imageWidth
 		mov r13b, BYTE PTR[r8+r14]
 		pinsrw xmm0, r13d ,2
+
 		row3:
 		;if(row != imageHeight-1)
 		mov r11d, imageHeight;
 		dec r11d;
-		cmp edx, r11d
+		cmp eax, r11d
 		jz ifend
+
 		mov r14d, imageWidth			;r14d = imageWidth
-		add r14d, r12d					;r14d = imageWidth+(i+1)
+		add r14d, ecx					;r14d = imageWidth +i
+		inc r14d						;r14d = i+1+imageWidth
 		mov r13b, BYTE PTR[r8+r14]
 		pinsrw xmm0, r13d ,4
 
-		sub r12d,2						;r12d = i-1
-
-		mov r14d, imageWidth			;r14d = imageWidth
-		add r14d, r12d					;r14d = imageWidth+(i-1)
+		sub r14d,2						;r14d = i-1+imageWidth
 		mov r13b, BYTE PTR[r8+r14]
 		pinsrw xmm0, r13d ,6
 
@@ -344,10 +351,11 @@ forloop:
 	cmp eax, 0
 	jnz ifelse
 	; IF statement - top wall:
-		mov r12d, ecx					; r12d = i
-		mov r14d, ecx
-		add r14d, imageWidth			; r14d = i+imageWidth
+		mov r13b, BYTE PTR[r8+rcx]		;Correction
+		pinsrw xmm0, r13d, 1
 
+		mov r14d, ecx					; r14d = i
+		add r14d, imageWidth			; r14d = i+imageWidth
 		mov r13b, BYTE PTR[r8+r14]
 		pinsrw xmm0, r13d, 5
 		
@@ -358,6 +366,9 @@ forloop:
 		dec r14d						; r14d = i-1+imageWidth
 		mov r13b, BYTE PTR[r8+r14]
 		pinsrw xmm0, r13d, 6
+
+		mov r13b, BYTE PTR[r8+rcx]		;Correction
+		pinsrw xmm0, r13d, 0
 
 		Hrow1:
 		;if(i%imageWidth != imageWidth-1)
@@ -371,6 +382,9 @@ forloop:
 		inc r14d						; r14d = i+1+imageWidth
 		mov r13b, BYTE PTR[r8+r14]
 		pinsrw xmm0, r13d, 4
+
+		mov r13b, BYTE PTR[r8+rcx]		;Correction
+		pinsrw xmm0, r13d, 2
 		jmp ifend
 
 	ifelse:
@@ -380,6 +394,9 @@ forloop:
 		jnz ifelse2
 
 		; ELSEIF statement - bottom wall:
+		mov r13b, BYTE PTR[r8+rcx]		;Correction
+		pinsrw xmm0, r13d, 5
+
 		mov r14d, ecx					; r14d = i
 		sub r14d, imageWidth			; rd14 = i-imageWidth
 		mov r13b, BYTE PTR[r8+r14]
@@ -388,6 +405,9 @@ forloop:
 		;if(i%imageWidth!=0)
 		cmp r10d, 0
 		jz Hrow2
+
+		mov r13b, BYTE PTR[r8+rcx]		;Correction
+		pinsrw xmm0, r13d, 6
 
 		dec r14d						; r14d = i-1-imageWidth
 		mov r13b, BYTE PTR[r8+r14]
@@ -400,12 +420,16 @@ forloop:
 		cmp r10d, r11d
 		jz ifend
 
+		mov r13b, BYTE PTR[r8+rcx]		;Correction
+		pinsrw xmm0, r13d, 4
+
 		mov r14d, ecx					; r14d = i
 		sub r14d, imageWidth			; r14d = i-imageWidth
 		inc r14d						; r14d = i+1-imageWidth
 		mov r13b, BYTE PTR[r8+r14]
 		pinsrw xmm0, r13d, 2
 		jmp ifend
+
 	ifelse2:
 		; ELSE statement - center:
 		mov r14d, ecx
@@ -494,9 +518,8 @@ push rdi
 mov r14d, DWORD PTR[rbp + 48]
 mov r10d, DWORD PTR[rbp + 56]
 mov r15, rdx					; move output array pointer to r15
-xor rdx,rdx
 
-add r14, r10					; r14 = bytesToCalculate+whereToStart
+add r14, r10					; r14 = bytesToCalculate + whereToStart
 
 mov r11d, r9d
 sub r11d, r8d					; r11d = diffenerce = max-min
@@ -504,10 +527,11 @@ jnz normalLoop
 inc r11d						; if (r11d == 0) r11d = 1 - preventiong division by 0
 
 normalLoop:
+	xor rdx,rdx
 	mov r13d, DWORD PTR[rcx+r10*4]
 	sub r13d, r8d				; r13d = Array[i]-minimum
 	mov eax, r13d
-	shl eax, 8					; eax*2^8
+	shl eax, 8					; eax*2^8 = eax*256
 	sub eax, r13d				; eax = r13d*255 = r13d*(256-1) = r13d*256-r13d
 	div r11d					; eax = r13d*255/r11d -> (Array[i]-minimum)*255/diffenerce
 

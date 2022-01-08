@@ -33,7 +33,7 @@ int* Vertical(BYTE* Array, int imageHeight, int imageWidth, int bytesToCalculate
 		}
 		else if (i % imageWidth == imageWidth - 1) //right wall
 		{
-			GX[i - start] += Array[i - 1] * 2 + Array[i - 1] * -2;
+			GX[i - start] += Array[i - 1] * 2 + Array[i] * -2;
 			if (row != 0) GX[i - start] += Array[i - 1 - imageWidth] * 1 + Array[i] * -1; //Not top
 			if (row != imageHeight - 1) GX[i - start] += Array[i - 1 + imageWidth] * 1 + Array[i] * -1; //Not bottom
 		}

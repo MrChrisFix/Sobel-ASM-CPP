@@ -72,7 +72,7 @@ std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPMan
 			if (Threads[i].joinable())
 			{
 				Threads[i].join();
-			}*/
+		}*/
 
 		doASMSobel(bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[0], 0);
 
@@ -104,6 +104,11 @@ std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPMan
 
 	auto end = std::chrono::steady_clock::now();
 	std::chrono::duration<double> elapsed_seconds = end - start;
+
+	if (length != nullptr) delete[] length;
+	if (calculated != nullptr) delete[] calculated;
+	if (helper != nullptr) delete[] helper;
+	//Threads.clear();
 
 	return elapsed_seconds;
 }

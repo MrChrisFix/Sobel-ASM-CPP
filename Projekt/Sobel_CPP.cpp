@@ -31,6 +31,7 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 	std::vector<std::thread> Threads;
 
 	int* calcArray = new int[arraySize];
+	BYTE* normalized = new BYTE[arraySize];
 
 	int arrayStartOffset = 0;
 	auto start = std::chrono::steady_clock::now();
@@ -59,7 +60,6 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 	}
 
 	//Second use of threads: Normalizing the array to [0-255]
-	BYTE*normalized = new BYTE[arraySize];
 	arrayStartOffset = 0;
 	for (int i = 0; i < numerOfThreads; i++)
 	{
