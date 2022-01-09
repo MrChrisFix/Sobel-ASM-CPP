@@ -328,8 +328,6 @@ void BMPManager::changeToGrayScale()
 		}
 		currentByte += addtionalPixels;
 	}
-
-	//if (checkIfGray()) std::cout << "Szare"; else std::cout << "Nie jest szare";
 }
 
 

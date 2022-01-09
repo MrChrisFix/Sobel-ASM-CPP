@@ -18,9 +18,6 @@ namespace ProjektJA {
 	using namespace System::Drawing;
 
 
-	/// <summary>
-	/// Podsumowanie informacji o MyForm
-	/// </summary>
 	public ref class MyForm : public System::Windows::Forms::Form
 	{
 		Listener^ listener;
@@ -29,9 +26,6 @@ namespace ProjektJA {
 		MyForm(void)
 		{
 			InitializeComponent();
-			//
-			//TODO: W tym miejscu dodaj kod konstruktora
-			//
 			this->comboBox1->SelectedIndex = 0;
 			
 			this->openFileDialog1->Title = "Wybierz obraz";
@@ -42,9 +36,6 @@ namespace ProjektJA {
 		}
 
 	protected:
-		/// <summary>
-		/// Wyczyœæ wszystkie u¿ywane zasoby.
-		/// </summary>
 		~MyForm()
 		{
 			if (components)
@@ -76,16 +67,13 @@ namespace ProjektJA {
 	protected:
 
 	private:
-		/// <summary>
-		/// Wymagana zmienna projektanta.
-		/// </summary>
+		/// Needed projectant variable
 		System::ComponentModel::Container ^components;
 
 #pragma region Windows Form Designer generated code
-		/// <summary>
-		/// Metoda wymagana do obs³ugi projektanta — nie nale¿y modyfikowaæ
-		/// jej zawartoœci w edytorze kodu.
-		/// </summary>
+		
+		//This method is needed to use the projectant - you shouldn't modify
+		// it in the code editor
 		void InitializeComponent(void)
 		{
 			this->pictureBox1 = (gcnew System::Windows::Forms::PictureBox());

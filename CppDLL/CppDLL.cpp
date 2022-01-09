@@ -20,7 +20,7 @@ int* Vertical(BYTE* Array, int imageHeight, int imageWidth, int bytesToCalculate
 
 	//DISCLAIMER: 
 	// In the below calculation I use Array[i] * ... when this isn't required becouse
-	//it makes the edges prettier(more granient gray instead of just one-tone gray)
+	// it makes the edges prettier(more granient gray instead of just one-tone gray)
 	for (int i = start; i < start + bytesToCalculate; i++)
 	{
 		int row = (i - i % imageWidth)/imageWidth; //safe row
@@ -62,7 +62,7 @@ int* Horizontal(BYTE* Array, int imageHeight, int imageWidth, int bytesToCalcula
 
 	//DISCLAIMER: 
 	// In the below calculation I use Array[i] * ... when this isn't required becouse
-	//it makes the edges prettier(more granient gray instead of just plain gray)
+	// it makes the edges prettier(more granient gray instead of just plain gray)
 	for (int i = start; i < start + bytesToCalculate; i++)
 	{
 		int row = (i - i % imageWidth) / imageWidth;
@@ -96,8 +96,6 @@ Expo void Sobel(BYTE* grayArray, int imageHeight, int imageWidth, int bytesToCal
 	int* Sobel_GX = Vertical(grayArray, imageHeight, imageWidth, bytesToCalculate, start);
 	int* Sobel_GY = Horizontal(grayArray, imageHeight, imageWidth, bytesToCalculate, start);
 
-	//int* SobelMagnitude = new int[bytesToCalculate];
-
 	for (int i = 0; i < bytesToCalculate; i++)
 	{
 		calculatedArray[i+start] = std::sqrt(pow(Sobel_GX[i], 2) + pow(Sobel_GY[i], 2));
@@ -105,14 +103,6 @@ Expo void Sobel(BYTE* grayArray, int imageHeight, int imageWidth, int bytesToCal
 
 	delete[] Sobel_GX;
 	delete[] Sobel_GY;
-
-
-	/*for (int i = start; i < start + bytesToCalculate; i++)
-	{
-		calculatedArray[i] = SobelMagnitude[i - start];
-	}*/
-
-	//delete[] SobelMagnitude;
 }
 
 Expo void Normalize(int* source, int minimum, int maximum, int bytesToCalculate, int start, BYTE*& calculatedArray)

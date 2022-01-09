@@ -47,10 +47,7 @@ std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPMan
 		length[i]++;
 	}
 
-
 	std::vector<std::thread> Threads;
-
-	
 
 	int* calculated = new int[arraySize];
 	BYTE* normalized = new BYTE[arraySize];
@@ -74,8 +71,6 @@ std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPMan
 				Threads[i].join();
 			}
 
-		//doASMSobel(bitmap->getGrayArray(), calculated, helper, bitmap->getHeight(), bitmap->getWidth(), length[0], 0);
-
 		//Find minimum and maximum for normalization 
 		int minimum, maximum;
 		minimum = maximum = calculated[0];
@@ -92,7 +87,6 @@ std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPMan
 			Threads[i] = std::thread(*doASMNormalization, calculated, normalized, minimum, maximum, length[i], arrayStartOffset);
 			arrayStartOffset += length[i];
 		}
-		//doASMNormalization(calculated, normalized, minimum, maximum, length[0], 0);
 
 		for (int i = 0; i < numerOfThreads; i++)
 			if (Threads[i].joinable())

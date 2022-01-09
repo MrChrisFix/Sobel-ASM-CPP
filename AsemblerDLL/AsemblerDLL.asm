@@ -40,11 +40,6 @@ mov r14d, edx
 ; R14 always has whereToStart
 ; R15 always has bytesToCalculate
 
-
-xor eax, eax ; clearing register
-xor ebx, ebx ; clearing register
-xor ecx, ecx ; clearing register
-
 call Vertical
 call Horizontal
 
@@ -92,14 +87,13 @@ jz afterRest
 
 afterRest:
 
-cmp r11d, r15d			; if a thread gets less than 4 dwords is can end
+cmp r11d, r15d				; if a thread gets less than 4 dwords is can end
 jz TheEnd
 
 mov r10d, r14d
 imul r10d, 4
 squareloop:
-	;movdqa xmm0, OWORD PTR[rdi+r10]	; possible alterante instruction
-	vmovdqu xmm0, OWORD PTR[rdi+r10]	;The error is possobly bc i try to read e.g 1/4 of the first int and 3/4 of the second
+	vmovdqu xmm0, OWORD PTR[rdi+r10]
 	vmovdqu xmm1, OWORD PTR[rsi+r10]
 
 	paddd xmm0, xmm1		; sum
@@ -221,7 +215,7 @@ forloop:
 
 		mov r8d, imageWidth				; r8d = imageWidth
 		add r8d, ecx					; r8d = imageWidth+i
-		inc r8d						; r8d = imageWidth+i+1
+		inc r8d							; r8d = imageWidth+i+1
 		mov r13b, BYTE PTR[rsi+r8]
 		pinsrw xmm0, r13d, 4
 
@@ -318,18 +312,18 @@ forloop:
 
 ifend:
 	
-	pmaddwd	xmm0, xmm1	; multiply and add words into dwords
-	phaddd xmm0, xmm0	; add 2 neighbouring dwords into one dword
-	phaddd xmm0, xmm0	; ^ and now the sum of all words(bytes) is in the first dword of xmm0
+	pmaddwd	xmm0, xmm1					; multiply and add words into dwords
+	phaddd xmm0, xmm0					; add 2 neighbouring dwords into one dword
+	phaddd xmm0, xmm0					; ^ and now the sum of all words(bytes) is in the first dword of xmm0
 
-	pextrd eax, xmm0, 0	; the sum is now in eax
+	pextrd eax, xmm0, 0					; the sum is now in eax
 
-	imul eax, eax		; calculate the power of 2 of the number for later
+	imul eax, eax						; calculate the power of 2 of the number for later
 
 	mov [rdi+rcx*4], eax
 
 
-	inc ecx				;increment counter
+	inc ecx								;increment counter
 	cmp ecx, r9d
 jnz forloop
 
@@ -515,13 +509,13 @@ forloop:
 
 ifend:
 	
-	pmaddwd	xmm0, xmm1	; multiply and add words into dwords
-	phaddd xmm0, xmm0	; add 2 neighbouring dwords into one dword
-	phaddd xmm0, xmm0	; ^ and now the sum of all words(bytes) is in the first dword of xmm0
+	pmaddwd	xmm0, xmm1					; multiply and add words into dwords
+	phaddd xmm0, xmm0					; add 2 neighbouring dwords into one dword
+	phaddd xmm0, xmm0					; ^ and now the sum of all words(bytes) is in the first dword of xmm0
 
-	pextrd eax, xmm0, 0	; the sum is now in eax
+	pextrd eax, xmm0, 0					; the sum is now in eax
 
-	imul eax, eax		; calculate the power of 2 of the number for later
+	imul eax, eax						; calculate the power of 2 of the number for later
 	mov [rdi+rcx*4], eax
 
 	inc ecx
