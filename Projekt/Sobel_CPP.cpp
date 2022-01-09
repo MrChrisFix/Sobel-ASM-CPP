@@ -11,8 +11,10 @@ Sobel_CPP::~Sobel_CPP()
 {
 }
 
-std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPManager* bitmap, BYTE*& ptr)
+std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPManager* bitmap, BYTE*& ptr, System::Windows::Forms::ProgressBar^ progress)
 {
+	progress->Maximum = numerOfThreads * 2;
+
 	//Slicing the array into parts for multithreading
 	int* length = new int[numerOfThreads];
 	int arraySize = bitmap->getHeight() * bitmap->getWidth();
@@ -48,6 +50,7 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 		if (Threads[i].joinable())
 		{
 			Threads[i].join();
+			progress->Value += 1;
 		}
 
 	//Find minimum and maximum for normalization 
@@ -71,6 +74,7 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 		if (Threads[i].joinable())
 		{
 			Threads[i].join();
+			progress->Value += 1;
 		}
 
 	auto end = std::chrono::steady_clock::now();

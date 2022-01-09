@@ -13,7 +13,7 @@ public:
 	Sobel_CPP();
 	~Sobel_CPP();
 
-	std::chrono::duration<double> executeInCpp(int numerOfThreads, BMPManager* bitmap, BYTE*& ptr);
+	std::chrono::duration<double> executeInCpp(int numerOfThreads, BMPManager* bitmap, BYTE*& ptr, System::Windows::Forms::ProgressBar^ progress);
 
 };
 

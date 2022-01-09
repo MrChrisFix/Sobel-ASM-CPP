@@ -30,7 +30,7 @@ public:
 	Bitmap^ getChangedBitmap();
 	void saveBitmap(System::String^ fileName);
 
-	std::chrono::duration<double> reactOnStartButton(short id, short threadNumber, System::Windows::Forms::PictureBox^ pictureBox);
+	std::chrono::duration<double> reactOnStartButton(short id, short threadNumber, System::Windows::Forms::PictureBox^ pictureBox, System::Windows::Forms::ProgressBar^ progress);
 
 private:
 

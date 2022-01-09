@@ -22,7 +22,7 @@ public:
 	Sobel_ASM();
 	~Sobel_ASM();
 
-	std::chrono::duration<double> executeInASM(int numerOfThreads, BMPManager* bitmap, unsigned char*& ptr);
+	std::chrono::duration<double> executeInASM(int numerOfThreads, BMPManager* bitmap, unsigned char*& ptr, System::Windows::Forms::ProgressBar^ progress);
 
 };
 

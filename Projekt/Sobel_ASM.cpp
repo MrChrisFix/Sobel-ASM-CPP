@@ -31,8 +31,10 @@ Sobel_ASM::~Sobel_ASM()
 
 }
 
-std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPManager* bitmap, unsigned char*& ptr)
+std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPManager* bitmap, unsigned char*& ptr, System::Windows::Forms::ProgressBar^ progress)
 {
+	progress->Maximum = numerOfThreads * 2;
+
 	//Slicing the array into parts for multithreading
 	int* length = new int[numerOfThreads];
 	int arraySize = bitmap->getHeight() * bitmap->getWidth();
@@ -69,6 +71,7 @@ std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPMan
 			if (Threads[i].joinable())
 			{
 				Threads[i].join();
+				progress->Value += 1;
 			}
 
 		//Find minimum and maximum for normalization 
@@ -92,6 +95,7 @@ std::chrono::duration<double> Sobel_ASM::executeInASM(int numerOfThreads, BMPMan
 			if (Threads[i].joinable())
 			{
 				Threads[i].join();
+				progress->Value += 1;
 			}
 
 		ptr = normalized;

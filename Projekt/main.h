@@ -286,6 +286,9 @@ namespace ProjektJA {
 
 	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) 
 	{
+
+		progressBar1->Value = 0;
+
 		int numberOfThreads = 0;
 		if(!(this->textBox1->Text == "")) numberOfThreads = int::Parse(this->textBox1->Text);
 
@@ -296,7 +299,7 @@ namespace ProjektJA {
 			return;
 		}
 		this->label7->Text = L"";
-		auto elapsedSeconds = this->listener->reactOnStartButton(this->comboBox1->SelectedIndex, numberOfThreads, this->pictureBox2);
+		auto elapsedSeconds = this->listener->reactOnStartButton(this->comboBox1->SelectedIndex, numberOfThreads, this->pictureBox2, this->progressBar1);
 
 		if (elapsedSeconds.count() > 0.01)
 		{
@@ -308,6 +311,8 @@ namespace ProjektJA {
 
 	private: System::Void openFileDialog1_FileOk(System::Object^ sender, System::ComponentModel::CancelEventArgs^ e) 
 	{
+		progressBar1->Value = 0;
+
 		auto czas = L"" + "0 ms";
 		this->label2->Text = czas;
 

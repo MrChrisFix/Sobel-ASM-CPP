@@ -53,7 +53,7 @@ void Listener::saveBitmap(System::String^ fileName)
 
 }
 
-std::chrono::duration<double> Listener::reactOnStartButton(short id, short threadNumber, System::Windows::Forms::PictureBox^ pictureBox)
+std::chrono::duration<double> Listener::reactOnStartButton(short id, short threadNumber, System::Windows::Forms::PictureBox^ pictureBox, System::Windows::Forms::ProgressBar^ progress)
 {
 	std::chrono::duration<double> elapsed_seconds;
 
@@ -63,7 +63,7 @@ std::chrono::duration<double> Listener::reactOnStartButton(short id, short threa
 		if (id == 0) //Asembler
 		{
 			currentImage = 0;
-			elapsed_seconds = this->Asm.executeInASM(threadNumber, bmpManager, arrayPtr);
+			elapsed_seconds = this->Asm.executeInASM(threadNumber, bmpManager, arrayPtr, progress);
 			this->AsmBitmap = this->bmpManager->createBitmapFromGray(arrayPtr);
 			pictureBox->Image = this->AsmBitmap;
 		}
@@ -71,7 +71,7 @@ std::chrono::duration<double> Listener::reactOnStartButton(short id, short threa
 		{
 			currentImage = 1;
 
-			elapsed_seconds = this->Cpp.executeInCpp(threadNumber, bmpManager, arrayPtr);
+			elapsed_seconds = this->Cpp.executeInCpp(threadNumber, bmpManager, arrayPtr, progress);
 			this->CppBitmap = this->bmpManager->createBitmapFromGray(arrayPtr);
 			pictureBox->Image = this->CppBitmap;
 			
