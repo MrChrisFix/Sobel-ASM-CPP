@@ -14,10 +14,10 @@ The program is designed to <b>run only in x64</b>. The program has an user inter
 * GUI
 * Opening the images (bitmap 24bpp)
 * C++ DLL
+* Assembly DLL
 
 <h3>What isn't done yet</h3>
 
-* Assembly DLL
 * Languages
 * Saving the calculated image
 * Progress bar
