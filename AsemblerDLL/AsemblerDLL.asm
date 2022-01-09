@@ -1,8 +1,3 @@
-;ifndef X64
-;.686p
-;.xmm
-;.model	flat, C
-;endif
 
 .data
 grayArrayStart QWORD 0		; pointer to the read array
@@ -10,10 +5,6 @@ readyArray QWORD 0			; pointer for the modified array
 helperArray QWORD 0			; pointer for a helper array
 imageHeight DWORD 0			; the height of the image
 imageWidth DWORD 0			; the width of the image
-
-;TODO: thoose are non-global, delete them and put somewere else(stack/register)
-bytesToCalculate DWORD 0	; amount of bytes the thread has to calculate
-whereToStart DWORD 0		; offset of bytes where the thread should start in the grayArray
 
 ; Arguments (ints) passed from C++:
 ; 1 argument: RCX
@@ -42,10 +33,8 @@ mov edx, DWORD PTR[rbp + 48]
 mov imageWidth, edx
 
 mov edx, DWORD PTR[rbp + 56]
-mov bytesToCalculate, edx
-mov r15d, edx				;TODO: delete
+mov r15d, edx
 mov edx, DWORD PTR[rbp + 64]
-mov whereToStart, edx		;TODO: delete
 mov r14d, edx
 
 ; R14 always has whereToStart
@@ -65,55 +54,68 @@ mov rsi, helperArray		;GY Matrix
 
 
 mov ecx, 0					; counter for loop
-mov eax, r15d				;calculate number of loops
-mov r11, 4					; divide by 4 becouse dword is 4 bytes
+mov eax, r15d				; calculate number of loops
+mov r11, 4					; divide by 4 becouse xmm holds 4 dwords
 div r11						; eax = nuber of loops; edx = rest
 
-;mov r10d, ecx
+; Calculate the rest which doesn't fully fill one xmm
+; This section could be left out in large images where
+; the incompleteness of up to 192 pixles(max 3 px * max 64 threads) is negligible
+mov r11d, edx	; save the rest
+StartRest:
+cmp edx, 0
+jz afterRest
+
+	pxor xmm0, xmm0
+	pxor xmm1, xmm1
+	mov r10, r15
+	add r10, r14
+	sub r10, rdx
+	imul r10, 4
+
+	mov r8d, DWORD PTR[rdi+r10]
+	mov r9d, DWORD PTR[rsi+r10]
+	pinsrq xmm0, r8, 0
+	pinsrq xmm1, r9, 0
+
+	paddd xmm0, xmm1		; sum
+	cvtdq2ps xmm0, xmm0		; convert dword to single precision float
+	sqrtps xmm0, xmm0		; square root of xmm0
+	cvtps2dq xmm0, xmm0		; convert back to dword
+
+	pextrd r8d, xmm0, 0
+	mov DWORD PTR[rdi+r10], r8d
+
+	add r10, 4
+	dec edx
+	jmp StartRest
+
+afterRest:
+
+cmp r11d, r15d			; if a thread gets less than 4 dwords is can end
+jz TheEnd
+
 mov r10d, r14d
 imul r10d, 4
 squareloop:
-
 	;movdqa xmm0, OWORD PTR[rdi+r10]	; possible alterante instruction
-	vmovdqa xmm0, OWORD PTR[rdi+r10]	;The error is possobly bc i try to read e.g 1/4 of the first int nad 3/4 of the second
-	vmovdqa xmm1, OWORD PTR[rsi+r10]
+	vmovdqu xmm0, OWORD PTR[rdi+r10]	;The error is possobly bc i try to read e.g 1/4 of the first int and 3/4 of the second
+	vmovdqu xmm1, OWORD PTR[rsi+r10]
 
 	paddd xmm0, xmm1		; sum
 
-	cvtdq2ps xmm0, xmm0		; convert dword to single precision float
+	cvtdq2ps xmm0, xmm0		; convert dwords to single precision floats
 
 	sqrtps xmm0, xmm0		; square root of xmm0
 
-	cvtps2dq xmm0, xmm0		; convert back to dword
+	cvtps2dq xmm0, xmm0		; convert back to dwords
 
-	movdqa OWORD PTR[rdi+r10], xmm0
+	movdqu OWORD PTR[rdi+r10], xmm0
 
 	inc ecx
 	add r10d, 16				
 	cmp ecx, eax
 	jnz squareloop
-
-	;TODO: not finished, need to calculate the rest
-	;pxor xmm0, xmm0
-	;pxor xmm1, xmm1
-;restLoop:
-	;cmp rdx, 0
-	;jz TheEnd
-
-	;mov r8, DWORD PTR[rdi+r10]
-	;mov r9, DWORD PTR[rsi+r10]
-
-	;pinsrq xmm0, r8, 0
-	;pinsrq xmm1, r9, 0
-
-
-	;paddd xmm0, xmm1		; sum
-	;cvtdq2ps xmm0, xmm0		; convert dword to single precision float
-	;sqrtps xmm0, xmm0		; square root of xmm0
-	;cvtps2dq xmm0, xmm0		; convert back to dword
-
-	;movdqa OWORD PTR[rdi+r10], xmm0
-
 
 TheEnd:
 ; get back nonvolatile registers
@@ -140,12 +142,11 @@ Vertical proc ;use readyArray
 ; rax - current row
 ; rcx - loop couner
 ; r8 - temporary value
+; r9d - where to end in grayArray
+; r10d - ecx%imagewidth
 ; r11 - register used in cmp
 ; r12d - ecx +/- 1
-; r10d - ecx%imagewidth
-; r14d - r12d +/- imageWidth
 ; r13b - byte holder for xmm insertion
-; r9d - where to end in grayArray
 
 ; GXMATRIX:
 ;  1  0 -1
@@ -346,12 +347,11 @@ Horizontal proc		;use helperArray
 ; rax - current row
 ; rcx - loop couner
 ; r8 - temporary value
+; r9d - where to end in grayArray
+; r10d - ecx%imagewidth
 ; r11 - register used in cmp
 ; r12d - ecx +/- 1
-; r10d - ecx%imagewidth
-; r14d - r12d +/- imageWidth
 ; r13b - byte holder for xmm insertion
-; r9d - where to end in grayArray
 
 ;GYMATRIX:	
 ; 1  2  1
