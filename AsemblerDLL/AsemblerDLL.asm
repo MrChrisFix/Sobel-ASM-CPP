@@ -40,8 +40,12 @@ mov r14d, edx
 ; R14 always has whereToStart
 ; R15 always has bytesToCalculate
 
+;call Matrixes
+
 call Vertical
 call Horizontal
+
+;jmp TheEnd
 
 
 mov rdi, readyArray			;GX Matrix
@@ -123,6 +127,270 @@ pop r12
 ret
 
 Sobel endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Matrixes proc
+
+	mov rsi, grayArrayStart
+	mov rdi, readyArray
+
+	mov ecx, r14d						; Counter for loop
+
+	mov r9d, ecx						; use r9 for end of loop
+	add r9d, r15d						; ^
+
+forloop:
+	;Calculate the current row
+	mov eax, ecx	; save the conter into eax
+	xor edx,edx		; clean edx for division
+	div imageWidth	; div to get modulo in edx.
+	mov eax, ecx	; save the counter again
+	sub eax, edx
+	mov r10d, edx	; save the modulo for later
+	xor edx,edx		; clean edx for division
+	div imageWidth	; finally row is saved in eax
+
+	mov r9d, r14d
+	add r9d, r15d
+	cmp ecx, r9d
+	jz FunctionEnd					; start+i == start+bytesToCalculate
+
+	mov r11d, r9d
+	sub r11d, ecx
+	cmp r11d, 1						; Only one byte left to calculate
+	jz OneByte						; 
+
+
+	cmp eax, 0
+	jz loopEnd						; Top border, don't calculate, increnemt to the point of beeing out of first row
+
+	mov r11d, imageHeight
+	dec r11d
+	cmp eax, r11d
+	jz FunctionEnd					; row =?= imageHeight-1 -> bottom border, no need to calculate
+
+	mov r11d, imageWidth
+	dec r11d
+	cmp r10d, r11d					; i%imagewidth =?= imageWidth-1 -> Left border, don't calculate
+	jz loopEnd
+
+	dec r11d
+	cmp r10d, r11d					; i%imagewidth =?= imageWidth-2 -> calculate only one byte
+	jz OneByte						; INFO: Alternative option would be dec ecx and calculate 2, where the first would be calculated the second time
+
+	cmp r10d, 0
+	jnz CalculationStart			; Right border
+	inc ecx
+	cmp ecx, r9d
+	jnz forloop
+	jmp FunctionEnd
+
+CalculationStart:
+
+	;TODO: remove this comment
+	;New idea:
+	;read the dword to xmm. then:
+	;pmovzxbw -> vpbroadcastq -> copy to other xmm -> mask -> andNot for negation(pandn)
+
+	; xmm0 - read memory
+	; xmm1 - xmm3 - rows 1-3 vertical
+	; xmm4 - xmm6 - rows 1-3 horizontal
+	; xmm7, xmm8 - helpers
+
+	;FIRST ROW (new idea)
+
+		mov r11d, ecx
+		sub r11d, imageWidth
+		dec r11d							; r11d = i-imagewidth-1
+		movd xmm0, DWORD PTR[rsi+r11]		; save dword in xmm
+		pmovzxbw xmm0, xmm0					; set bytes as words
+		vpbroadcastq xmm0, xmm0				; coy first half into the second half
+		vmovdqu	xmm1, xmm0					; copy info to xmm1 for vertical
+		vmovdqu xmm4, xmm0					; copy info to xmm4 for horizontal
+
+;;;;;;;;;vertical
+		;mask for first row
+		mov r8, 0000FFFF0000FFFFh
+		movq xmm7, r8						; second byte is on the right side
+		mov r8, 0FFFF0000FFFF0000h
+		pinsrq xmm7, r8, 1					; first byte is on the left side
+
+		;use the mask
+		pand xmm1, xmm7
+	
+		; XOR mask negation for first row
+		mov r8, 000000000000FFFFh
+		movq xmm7, r8						; second byte is on the right side
+		mov r8, 000000000FFFF0000h
+		pinsrq xmm7, r8, 1					; first byte is on the left side
+
+		;use the neg mask via xor
+		pxor xmm1, xmm7
+
+
+;;;;;;;;;horizontal
+		;mask for first row
+		mov r8, 0000FFFFFFFFFFFFh
+		movq xmm7, r8						; second byte is on the right side
+		mov r8, 0FFFFFFFFFFFF0000h
+		pinsrq xmm7, r8, 1					; first byte is on the left side
+
+		;use the mask
+		pand xmm4, xmm7						; use mask
+		movdqu xmm8, xmm4					; create copy for *2
+
+		;mask for *2
+		mov r8, 00000000FFFF0000h
+		movq xmm7, r8						; second byte is on the right side
+		mov r8, 00000FFFF00000000h
+		pinsrq xmm7, r8, 1					; first byte is on the left side
+
+		pand xmm8, xmm7						; use mask on copy
+		paddw xmm4, xmm8					; add copy to original
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	;SECOND ROW
+		movd xmm0, DWORD PTR[rsi+rcx]
+		pmovzxbw xmm0, xmm0					; set bytes as words
+		vpbroadcastq xmm0, xmm0				; copy first half into the second half
+		vmovdqu	xmm2, xmm0					; copy info to xmm2 for vertical
+
+;;;;;;;;;vertical
+		paddw xmm2, xmm2					; multiply by 2
+
+		;mask for second row
+		mov r8, 0000FFFF0000FFFFh
+		movq xmm7, r8						; second byte is on the right side
+		mov r8, 0FFFF0000FFFF0000h
+		pinsrq xmm7, r8, 1					; first byte is on the left side
+
+		;use the mask
+		pand xmm2, xmm7
+	
+		; XOR mask negation for second row
+		mov r8, 000000000000FFFFh
+		movq xmm7, r8						; second byte is on the right side
+		mov r8, 000000000FFFF0000h
+		pinsrq xmm7, r8, 1					; first byte is on the left side
+
+		;use the neg mask via xor
+		pxor xmm2, xmm7
+
+;;;;;;;;;horizontal
+		; here are only zeros
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	;THIRD ROW
+		mov r11d, ecx
+		add r11d, imageWidth
+		dec r11d						; r11d = i+imagewidth-1
+		movd xmm0, DWORD PTR[rsi+r11]
+		pmovzxbw xmm0, xmm0					; set bytes as words
+		vpbroadcastq xmm0, xmm0				; copy first half into the second half
+		vmovdqu	xmm3, xmm0					; copy info to xmm3 for vertical
+		vmovdqu	xmm6, xmm0					; copy info to xmm6 for horizontal
+
+		;vertical (the same as first row)
+			;mask for third row
+			mov r8, 0000FFFF0000FFFFh
+			movq xmm7, r8						; second byte is on the right side
+			mov r8, 0FFFF0000FFFF0000h
+			pinsrq xmm7, r8, 1					; first byte is on the left side
+
+			;use the mask
+			pand xmm3, xmm7
+	
+			; XOR mask negation for first row
+			mov r8, 000000000000FFFFh
+			movq xmm7, r8						; second byte is on the right side
+			mov r8, 000000000FFFF0000h
+			pinsrq xmm7, r8, 1					; first byte is on the left side
+
+			;use the neg mask via xor
+			pxor xmm3, xmm7
+
+		;horizontal (the same as first but negated)
+			;mask for first row
+			mov r8, 0000FFFFFFFFFFFFh
+			movq xmm7, r8						; second byte is on the right side
+			mov r8, 0FFFFFFFFFFFF0000h
+			pinsrq xmm7, r8, 1					; first byte is on the left side
+
+			;use the mask
+			pand xmm6, xmm7						; use mask
+			movdqu xmm8, xmm6						; create copy for *2
+
+			;mask for *2
+			mov r8, 00000000FFFF0000h
+			movq xmm7, r8						; second byte is on the right side
+			mov r8, 00000FFFF00000000h
+			pinsrq xmm7, r8, 1					; first byte is on the left side
+
+			pand xmm8, xmm7						; use mask on copy
+			paddw xmm6, xmm8					; add copy to original
+
+			pcmpeqb xmm7, xmm7					; fill xmm7 with 1s
+
+			pandn xmm6, xmm7					; negate all bytes in xmm6
+
+
+	; adding the regiesters
+	;vertical
+	paddw xmm1, xmm2
+	paddw xmm1, xmm3
+
+	phaddw xmm1, xmm1							; horizontal add words
+	pmovsxwd xmm1, xmm1							; set lower words as all dwords respecting the sign
+	phaddd xmm1, xmm1							; horizontal add dwords
+
+
+	;horizontal
+	paddw xmm4, xmm6							; xmm5 is empty
+
+	phaddw xmm4, xmm4							; horizontal add words
+	pmovsxwd xmm4, xmm4							; set lower words as all dwords respecting the sign
+	phaddd xmm4, xmm4							; horizontal add dwords
+
+
+	;power of 2
+	
+	pmulld xmm1, xmm1
+
+	pmulld xmm4, xmm4
+
+	;squareroot
+	paddd xmm1, xmm4		; sum
+
+	cvtdq2ps xmm1, xmm1		; convert dwords to single precision floats
+
+	sqrtps xmm1, xmm1		; square root of xmm0
+
+	cvtps2dq xmm1, xmm1		; convert back to dwords
+
+	movq r8, xmm1
+	mov [rdi+rcx*4], r8		; move result to memory
+
+
+
+
+
+
+loopEnd:
+
+	add ecx, 2						; 2 Bits a time are calculated
+	jmp forloop
+FunctionEnd:
+
+ret
+
+OneByte:
+inc ecx
+jmp forloop
+
+Matrixes endp	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
