@@ -40,12 +40,12 @@ mov r14d, edx
 ; R14 always has whereToStart
 ; R15 always has bytesToCalculate
 
-;call Matrixes
+call Matrixes
 
-call Vertical
-call Horizontal
+;call Vertical
+;call Horizontal
 
-;jmp TheEnd
+jmp TheEnd
 
 
 mov rdi, readyArray			;GX Matrix
@@ -140,6 +140,18 @@ Matrixes proc
 	mov r9d, ecx						; use r9 for end of loop
 	add r9d, r15d						; ^
 
+	;Corection for vertical negation
+	mov r8, 0000000000000001h
+	movq xmm11, r8
+	mov r8, 0000000000010000h
+	pinsrq xmm11, r8, 1
+
+	;Correction for horizontal negation
+	mov r8, 0000000100010001h
+	movq xmm12, r8
+	mov r8, 0001000100010000h
+	pinsrq xmm12, r8, 1
+
 forloop:
 	;Calculate the current row
 	mov eax, ecx	; save the conter into eax
@@ -202,7 +214,7 @@ CalculationStart:
 
 		mov r11d, ecx
 		sub r11d, imageWidth
-		dec r11d							; r11d = i-imagewidth-1
+		dec r11d							; r11d = i-1-imagewidth
 		movd xmm0, DWORD PTR[rsi+r11]		; save dword in xmm
 		pmovzxbw xmm0, xmm0					; set bytes as words
 		vpbroadcastq xmm0, xmm0				; coy first half into the second half
@@ -220,14 +232,14 @@ CalculationStart:
 		pand xmm1, xmm7
 	
 		; XOR mask negation for first row
-		mov r8, 000000000000FFFFh
+		mov r8, 0000FFFF00000000h
 		movq xmm7, r8						; second byte is on the right side
-		mov r8, 000000000FFFF0000h
+		mov r8, 0FFFF000000000000h
 		pinsrq xmm7, r8, 1					; first byte is on the left side
 
 		;use the neg mask via xor
 		pxor xmm1, xmm7
-
+		paddw xmm1, xmm11					;Correction
 
 ;;;;;;;;;horizontal
 		;mask for first row
@@ -243,7 +255,7 @@ CalculationStart:
 		;mask for *2
 		mov r8, 00000000FFFF0000h
 		movq xmm7, r8						; second byte is on the right side
-		mov r8, 00000FFFF00000000h
+		mov r8, 0000FFFF00000000h
 		pinsrq xmm7, r8, 1					; first byte is on the left side
 
 		pand xmm8, xmm7						; use mask on copy
@@ -252,7 +264,9 @@ CalculationStart:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	;SECOND ROW
-		movd xmm0, DWORD PTR[rsi+rcx]
+		mov r11d, ecx						; r11 = i
+		dec r11d							; r11 = i-1
+		movd xmm0, DWORD PTR[rsi+r11]
 		pmovzxbw xmm0, xmm0					; set bytes as words
 		vpbroadcastq xmm0, xmm0				; copy first half into the second half
 		vmovdqu	xmm2, xmm0					; copy info to xmm2 for vertical
@@ -270,13 +284,14 @@ CalculationStart:
 		pand xmm2, xmm7
 	
 		; XOR mask negation for second row
-		mov r8, 000000000000FFFFh
+		mov r8, 0000FFFF00000000h
 		movq xmm7, r8						; second byte is on the right side
-		mov r8, 000000000FFFF0000h
+		mov r8, 0FFFF000000000000h
 		pinsrq xmm7, r8, 1					; first byte is on the left side
 
 		;use the neg mask via xor
 		pxor xmm2, xmm7
+		paddw xmm2, xmm11					;Correction
 
 ;;;;;;;;;horizontal
 		; here are only zeros
@@ -303,38 +318,37 @@ CalculationStart:
 			;use the mask
 			pand xmm3, xmm7
 	
-			; XOR mask negation for first row
-			mov r8, 000000000000FFFFh
+			; XOR mask negation for third row
+			mov r8, 0000FFFF00000000h
 			movq xmm7, r8						; second byte is on the right side
-			mov r8, 000000000FFFF0000h
+			mov r8, 0FFFF000000000000h
 			pinsrq xmm7, r8, 1					; first byte is on the left side
 
 			;use the neg mask via xor
 			pxor xmm3, xmm7
+			paddw xmm3, xmm11					;Correction
 
 		;horizontal (the same as first but negated)
-			;mask for first row
+			;mask for third row
 			mov r8, 0000FFFFFFFFFFFFh
 			movq xmm7, r8						; second byte is on the right side
 			mov r8, 0FFFFFFFFFFFF0000h
 			pinsrq xmm7, r8, 1					; first byte is on the left side
 
 			;use the mask
-			pand xmm6, xmm7						; use mask
-			movdqu xmm8, xmm6						; create copy for *2
+			pandn xmm6, xmm7					; use mask and negate
+			paddw xmm6, xmm12					; Correction
+			movdqu xmm8, xmm6					; create copy for *2
 
 			;mask for *2
 			mov r8, 00000000FFFF0000h
 			movq xmm7, r8						; second byte is on the right side
-			mov r8, 00000FFFF00000000h
+			mov r8, 0000FFFF00000000h
 			pinsrq xmm7, r8, 1					; first byte is on the left side
 
 			pand xmm8, xmm7						; use mask on copy
+			;paddw xmm8, xmm12					; Correction
 			paddw xmm6, xmm8					; add copy to original
-
-			pcmpeqb xmm7, xmm7					; fill xmm7 with 1s
-
-			pandn xmm6, xmm7					; negate all bytes in xmm6
 
 
 	; adding the regiesters
@@ -353,6 +367,12 @@ CalculationStart:
 	phaddw xmm4, xmm4							; horizontal add words
 	pmovsxwd xmm4, xmm4							; set lower words as all dwords respecting the sign
 	phaddd xmm4, xmm4							; horizontal add dwords
+
+	;temporary fix:
+	;pextrd r9d, xmm4, 0
+	;pextrd r12d, xmm4, 1
+	;pinsrd xmm4, r9d, 1
+	;pinsrd xmm4, r12d, 0
 
 
 	;power of 2
@@ -386,7 +406,7 @@ FunctionEnd:
 
 ret
 
-OneByte:
+OneByte: ;TODO: finish this
 inc ecx
 jmp forloop
 
