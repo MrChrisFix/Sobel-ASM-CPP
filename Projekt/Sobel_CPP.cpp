@@ -33,6 +33,7 @@ std::chrono::duration<double> Sobel_CPP::executeInCpp(int numerOfThreads, BMPMan
 	std::vector<std::thread> Threads;
 
 	int* calcArray = new int[arraySize];
+	for (int i = 0; i < arraySize; i++) calcArray[i] = 0;
 	BYTE* normalized = new BYTE[arraySize];
 
 	int arrayStartOffset = 0;
