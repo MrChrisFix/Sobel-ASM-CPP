@@ -67,17 +67,41 @@ Matrixes proc
 	mov r9d, ecx						; use r9 for end of loop
 	add r9d, r15d						; ^
 
+	;Vertical mask
+	mov r8, 0000FFFF0000FFFFh
+	movq xmm10, r8						; first byte is on the right side
+	mov r8, 0FFFF0000FFFF0000h
+	pinsrq xmm10, r8, 1					; second byte is on the left side
+
+	;Vertical negatin mask
+	mov r8, 0000FFFF00000000h
+	movq xmm11, r8						; first byte is on the right side
+	mov r8, 0FFFF000000000000h
+	pinsrq xmm11, r8, 1					; second byte is on the left side
+
 	;Corection for vertical negation
 	mov r8, 0000000000000001h
-	movq xmm11, r8
+	movq xmm12, r8
 	mov r8, 0000000000010000h
-	pinsrq xmm11, r8, 1
+	pinsrq xmm12, r8, 1
+
+	;Horizontal Mask
+	mov r8, 0000FFFFFFFFFFFFh
+	movq xmm13, r8						; first byte is on the right side
+	mov r8, 0FFFFFFFFFFFF0000h
+	pinsrq xmm13, r8, 1					; second byte is on the left side
 
 	;Correction for horizontal negation
 	mov r8, 0000000100010001h
-	movq xmm12, r8
+	movq xmm14, r8
 	mov r8, 0001000100010000h
-	pinsrq xmm12, r8, 1
+	pinsrq xmm14, r8, 1
+
+	;Horizontal *2 mask
+	mov r8, 00000000FFFF0000h
+	movq xmm15, r8						; first byte is on the right side
+	mov r8, 0000FFFF00000000h
+	pinsrq xmm15, r8, 1					; second byte is on the left sid
 
 forloop:
 	;Calculate the current row
@@ -165,65 +189,39 @@ CalculationStart:
 
 ;;;;;;;;;vertical
 		paddw xmm2, xmm2					; multiply by 2
-		;mask
-		mov r8, 0000FFFF0000FFFFh
-		movq xmm7, r8						; second byte is on the right side
-		mov r8, 0FFFF0000FFFF0000h
-		pinsrq xmm7, r8, 1					; first byte is on the left side
-
 		;use the mask
-		pand xmm1, xmm7						;1st row
-		pand xmm2, xmm7						;2nd row
-		pand xmm3, xmm7						;3rd row
-		
-		; XOR mask for negation
-		mov r8, 0000FFFF00000000h
-		movq xmm7, r8						; second byte is on the right side
-		mov r8, 0FFFF000000000000h
-		pinsrq xmm7, r8, 1					; first byte is on the left side
+		pand xmm1, xmm10						; use mask on 1st row
+		pand xmm2, xmm10						; use mask on 2nd row
+		pand xmm3, xmm10						; use mask on 3rd row
 
 		;use the neg mask via xor
 		;1st row
-		pxor xmm1, xmm7
-		paddw xmm1, xmm11					;Correction
+		pxor xmm1, xmm11					;Use negation mask
+		paddw xmm1, xmm12					;Correction
 		;2nd row
-		pxor xmm2, xmm7
-		paddw xmm2, xmm11					;Correction
+		pxor xmm2, xmm11					;Use negation mask
+		paddw xmm2, xmm12					;Correction
 		;3rd row
-		pxor xmm3, xmm7
-		paddw xmm3, xmm11					;Correction
+		pxor xmm3, xmm11					;Use negation mask
+		paddw xmm3, xmm12					;Correction
 
 ;;;;;;;;;horizontal
 		; info : 2nd horizontal row is all zeros
 
-		;mask for first row
-		mov r8, 0000FFFFFFFFFFFFh
-		movq xmm7, r8						; second byte is on the right side
-		mov r8, 0FFFFFFFFFFFF0000h
-		pinsrq xmm7, r8, 1					; first byte is on the left side
-
-		;use the mask
 		;1st row
-		pand xmm4, xmm7						; use mask (1st row)
+		pand xmm4, xmm13					; use mask (1st row)
 		movdqu xmm8, xmm4					; create copy for *2
 		;3rd row
-		pandn xmm6, xmm7					; use mask nad negate(3rd row)
-		paddw xmm6, xmm12					; Correction
+		pandn xmm6, xmm13					; use mask nad negate(3rd row)
+		paddw xmm6, xmm14					; Correction
 		movdqu xmm9, xmm6					; create copy for *2
 
-
-		;mask for *2
-		mov r8, 00000000FFFF0000h
-		movq xmm7, r8						; second byte is on the right side
-		mov r8, 0000FFFF00000000h
-		pinsrq xmm7, r8, 1					; first byte is on the left side
-
 		;1st row
-		pand xmm8, xmm7						; use mask on copy
+		pand xmm8, xmm15					; use *2 mask on copy
 		paddw xmm4, xmm8					; add copy to original
 
 		;3rd row
-		pand xmm9, xmm7						; use mask on copy
+		pand xmm9, xmm15					; use *2 mask on copy
 		paddw xmm6, xmm9					; add copy to original
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
