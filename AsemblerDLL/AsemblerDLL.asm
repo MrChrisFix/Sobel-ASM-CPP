@@ -2,7 +2,6 @@
 .data
 grayArrayStart QWORD 0		; pointer to the read array
 readyArray QWORD 0			; pointer for the modified array
-helperArray QWORD 0			; pointer for a helper array
 imageHeight DWORD 0			; the height of the image
 imageWidth DWORD 0			; the width of the image
 
@@ -26,15 +25,12 @@ push rsi
 ;Load arguments
 mov grayArrayStart, RCX
 mov readyArray, RDX
-mov helperArray, R8
-mov imageHeight, R9D
+mov imageHeight, R8d
+mov imageWidth, R9d
 
 mov edx, DWORD PTR[rbp + 48]
-mov imageWidth, edx
-
-mov edx, DWORD PTR[rbp + 56]
 mov r15d, edx
-mov edx, DWORD PTR[rbp + 64]
+mov edx, DWORD PTR[rbp + 56]
 mov r14d, edx
 
 ; R14 always has whereToStart
@@ -101,7 +97,7 @@ Matrixes proc
 	mov r8, 00000000FFFF0000h
 	movq xmm15, r8						; first byte is on the right side
 	mov r8, 0000FFFF00000000h
-	pinsrq xmm15, r8, 1					; second byte is on the left sid
+	pinsrq xmm15, r8, 1					; second byte is on the left side
 
 forloop:
 	;Calculate the current row
