@@ -55,13 +55,12 @@ Sobel endp
 
 Matrixes proc
 
+	; Initialisation
+
 	mov rsi, grayArrayStart
 	mov rdi, readyArray
 
 	mov ecx, r14d						; Counter for loop
-
-	mov r9d, ecx						; use r9 for end of loop
-	add r9d, r15d						; ^
 
 	;Vertical mask
 	mov r8, 0000FFFF0000FFFFh
@@ -76,9 +75,9 @@ Matrixes proc
 	pinsrq xmm11, r8, 1					; second byte is on the left side
 
 	;Corection for vertical negation
-	mov r8, 0000000000000001h
+	mov r8, 0000000000000003h
 	movq xmm12, r8
-	mov r8, 0000000000010000h
+	mov r8, 0000000000030000h
 	pinsrq xmm12, r8, 1
 
 	;Horizontal Mask
@@ -99,8 +98,18 @@ Matrixes proc
 	mov r8, 0000FFFF00000000h
 	pinsrq xmm15, r8, 1					; second byte is on the left side
 
-forloop:
-	;Calculate the current row
+	mov r11d, imageHeight
+	dec r11d				; r11d = imageHeight-1
+
+	mov r12d, imageWidth
+	dec r12d;				; r12d = imageWidth-1
+	mov r13d, r12d
+	dec r13d				; r13d = imagewidth-2
+
+	mov r9d, ecx						; use r9 for end of loop
+	add r9d, r15d						; ^
+
+	;Calculate the current row and column
 	mov eax, ecx	; save the conter into eax
 	xor edx,edx		; clean edx for division
 	div imageWidth	; div to get modulo in edx.
@@ -110,40 +119,46 @@ forloop:
 	xor edx,edx		; clean edx for division
 	div imageWidth	; finally row is saved in eax
 
-	mov r9d, r14d
-	add r9d, r15d
-	cmp ecx, r9d
-	jz FunctionEnd					; start+i == start+bytesToCalculate
+	; eax - row counter
+	; r10d - column counter
+	cmp eax, 0					;if(row ==0)
+	jnz Initial1
+	mov ebx, imageWidth
+	sub ebx, r10d
+	inc ebx
+	add ecx, ebx				; ecx += imageWidth-column+1
+	mov r10d, 1					; column = 1
+	inc eax						; row++
 
-	mov r11d, r9d
-	sub r11d, ecx
-	cmp r11d, 1						; Only one byte left to calculate
-	jz OneByte						; 
-
-
-	cmp eax, 0
-	jz loopEnd						; Top border, don't calculate, increnemt to the point of beeing out of first row
-
-	mov r11d, imageHeight
-	dec r11d
-	cmp eax, r11d
-	jz FunctionEnd					; row =?= imageHeight-1 -> bottom border, no need to calculate
-
-	mov r11d, imageWidth
-	dec r11d
-	cmp r10d, r11d					; i%imagewidth =?= imageWidth-1 -> Left border, don't calculate
-	jz loopEnd
-
-	dec r11d
-	cmp r10d, r11d					; i%imagewidth =?= imageWidth-2 -> calculate only one byte
-	jz OneByte						; INFO: Alternative option would be dec ecx and calculate 2, where the first would be calculated the second time
-
+Initial1:
 	cmp r10d, 0
-	jnz CalculationStart			; Right border
-	inc ecx
-	cmp ecx, r9d
 	jnz forloop
-	jmp FunctionEnd
+	inc r10d					;if(col==0) col=1
+
+
+
+forloop:
+
+	cmp r10d, r12d		
+	jnz Test1					; col != imageWidth-1 -> jump
+	add ecx, 2
+	mov r10d, 1
+	inc eax						;ecx+=2, col = 1, row++
+
+Test1:
+
+	cmp eax, r11d
+	jge FunctionEnd				; row >= imageHeight-1
+
+	cmp ecx, r9d			
+	jge FunctionEnd				;i >= bytesToCalculate
+
+	cmp r10d, r13d		
+	jnz CalculationStart		; col != imageWidth-2 -> jump
+	dec ecx
+	dec r10d
+
+
 
 CalculationStart:
 
@@ -158,25 +173,25 @@ CalculationStart:
 
 	
 	;Load data to xmm's
-		mov r11d, ecx
-		dec r11d
-		movd xmm0, DWORD PTR[rsi+r11]		; r11d = i-1
+		mov r8d, ecx
+		dec r8d
+		movd xmm0, DWORD PTR[rsi+r8]		; r11d = i-1
 		pmovzxbw xmm0, xmm0					; set bytes as words
 		vpbroadcastq xmm0, xmm0				; copy first half into the second half
 		vmovdqu	xmm2, xmm0					; copy info to xmm2 for vertical
 		;Xmm5 is going to be empty
 
 
-		sub r11d, imageWidth				; r11d = i-1-imagewidth
-		movd xmm0, DWORD PTR[rsi+r11]		; save dword in xmm
+		sub r8d, imageWidth					; r11d = i-1-imagewidth
+		movd xmm0, DWORD PTR[rsi+r8]		; save dword in xmm
 		pmovzxbw xmm0, xmm0					; set bytes as words
-		vpbroadcastq xmm0, xmm0				; coy first half into the second half
+		vpbroadcastq xmm0, xmm0				; copy first half into the second half
 		vmovdqu	xmm1, xmm0					; copy info to xmm1 for vertical
 		vmovdqu xmm4, xmm0					; copy info to xmm4 for horizontal
 
-		add r11d, imageWidth
-		add r11d, imageWidth				; r11d = i+imagewidth-1
-		movd xmm0, DWORD PTR[rsi+r11]
+		add r8d, imageWidth
+		add r8d, imageWidth				; r11d = i+imagewidth-1
+		movd xmm0, DWORD PTR[rsi+r8]
 		pmovzxbw xmm0, xmm0					; set bytes as words
 		vpbroadcastq xmm0, xmm0				; copy first half into the second half
 		vmovdqu	xmm3, xmm0					; copy info to xmm3 for vertical
@@ -186,20 +201,17 @@ CalculationStart:
 ;;;;;;;;;vertical
 		paddw xmm2, xmm2					; multiply by 2
 		;use the mask
-		pand xmm1, xmm10						; use mask on 1st row
-		pand xmm2, xmm10						; use mask on 2nd row
-		pand xmm3, xmm10						; use mask on 3rd row
+		pand xmm1, xmm10					; use mask on 1st row
+		pand xmm2, xmm10					; use mask on 2nd row
+		pand xmm3, xmm10					; use mask on 3rd row
 
 		;use the neg mask via xor
 		;1st row
 		pxor xmm1, xmm11					;Use negation mask
-		paddw xmm1, xmm12					;Correction
 		;2nd row
 		pxor xmm2, xmm11					;Use negation mask
-		paddw xmm2, xmm12					;Correction
 		;3rd row
 		pxor xmm3, xmm11					;Use negation mask
-		paddw xmm3, xmm12					;Correction
 
 ;;;;;;;;;horizontal
 		; info : 2nd horizontal row is all zeros
@@ -227,6 +239,7 @@ CalculationStart:
 	;vertical
 	paddw xmm1, xmm2
 	paddw xmm1, xmm3
+	paddw xmm1, xmm12							; Correction
 
 	phaddw xmm1, xmm1							; horizontal add words
 	pmovsxwd xmm1, xmm1							; set lower words as all dwords respecting the sign
@@ -251,7 +264,7 @@ CalculationStart:
 
 	cvtdq2ps xmm1, xmm1		; convert dwords to single precision floats
 
-	sqrtps xmm1, xmm1		; square root of xmm0
+	sqrtps xmm1, xmm1		; square root of xmm1
 
 	cvtps2dq xmm1, xmm1		; convert back to dwords
 
@@ -259,18 +272,12 @@ CalculationStart:
 	mov [rdi+rcx*4], r8		; move result to memory
 
 
-loopEnd:
-
-	add ecx, 2						; 2 Bits a time are calculated
+	add ecx, 2						; 2 Bytes a time are calculated
+	add r10d, 2
 	jmp forloop
 FunctionEnd:
 
 ret
-
-OneByte: ;TODO: finish this
-inc ecx
-jmp forloop
-
 Matrixes endp	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -313,7 +320,7 @@ normalLoop:
 
 	mov BYTE PTR[r15+r10], al
 	inc r10d
-	cmp r10d, r14d
+	cmp r10d, r14d				; i =?= bytesTocalculate
 jnz normalLoop
 
 
