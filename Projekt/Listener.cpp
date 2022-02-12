@@ -74,9 +74,8 @@ std::chrono::duration<double> Listener::reactOnStartButton(short id, short threa
 			elapsed_seconds = this->Cpp.executeInCpp(threadNumber, bmpManager, arrayPtr, progress);
 			this->CppBitmap = this->bmpManager->createBitmapFromGray(arrayPtr);
 			pictureBox->Image = this->CppBitmap;
-			
-			if(arrayPtr!=nullptr) delete[] arrayPtr;
 		}
+		if(arrayPtr!=nullptr) delete[] arrayPtr;
 	}
 
 	elapsed_seconds *= 1000;

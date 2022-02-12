@@ -164,7 +164,7 @@ CalculationStart:
 
 	;Idea:
 	;read the dword to xmm. then:
-	;pmovzxbw -> vpbroadcastq -> copy to other xmm -> mask -> andNot for negation(pandn) or pxor
+	;pmovzxbw -> vpbroadcastq -> copy to other xmm -> mask -> negation(pandn or pxor) 
 
 	; xmm0 - read memory
 	; xmm1 - xmm3 - rows 1-3 vertical
@@ -190,7 +190,7 @@ CalculationStart:
 		vmovdqu xmm4, xmm0					; copy info to xmm4 for horizontal
 
 		add r8d, imageWidth
-		add r8d, imageWidth				; r11d = i+imagewidth-1
+		add r8d, imageWidth					; r11d = i+imagewidth-1
 		movd xmm0, DWORD PTR[rsi+r8]
 		pmovzxbw xmm0, xmm0					; set bytes as words
 		vpbroadcastq xmm0, xmm0				; copy first half into the second half
@@ -260,16 +260,16 @@ CalculationStart:
 	pmulld xmm4, xmm4
 
 	;squareroot
-	paddd xmm1, xmm4		; sum
+	paddd xmm1, xmm4				; sum
 
-	cvtdq2ps xmm1, xmm1		; convert dwords to single precision floats
+	cvtdq2ps xmm1, xmm1				; convert dwords to single precision floats
 
-	sqrtps xmm1, xmm1		; square root of xmm1
+	sqrtps xmm1, xmm1				; square root of xmm1
 
-	cvtps2dq xmm1, xmm1		; convert back to dwords
+	cvtps2dq xmm1, xmm1				; convert back to dwords
 
 	movq r8, xmm1
-	mov [rdi+rcx*4], r8		; move result to memory
+	mov [rdi+rcx*4], r8				; move result to memory
 
 
 	add ecx, 2						; 2 Bytes a time are calculated
