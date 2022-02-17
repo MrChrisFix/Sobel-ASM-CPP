@@ -10,6 +10,7 @@
       <Filter>Classes for library managemant</Filter>
     </ClCompile>
     <ClCompile Include="Listener.cpp" />
+    <ClCompile Include="Languages.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h" />
@@ -21,6 +22,7 @@
       <Filter>Classes for library managemant</Filter>
     </ClInclude>
     <ClInclude Include="Listener.h" />
+    <ClInclude Include="Languages.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Classes for library managemant">

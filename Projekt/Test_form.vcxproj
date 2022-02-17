@@ -133,6 +133,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Languages.cpp" />
     <ClCompile Include="Listener.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="BMPManager.cpp" />
@@ -140,6 +141,7 @@
     <ClCompile Include="Sobel_CPP.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Languages.h" />
     <ClInclude Include="Listener.h" />
     <ClInclude Include="main.h">
       <FileType>CppForm</FileType>
